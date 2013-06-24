@@ -32,12 +32,10 @@ $service = $services['cleardb-n/a'][0]; // pick the first service
  */
 $i++;
 /* Authentication type */
-$cfg['Servers'][$i]['auth_type'] = 'config';
+$cfg['Servers'][$i]['auth_type'] = 'cookie';
 /* Server parameters */
 $cfg['Servers'][$i]['host'] = $service['credentials']['hostname'];
 $cfg['Servers'][$i]['port'] = $service['credentials']['port'];
-$cfg['Servers'][$i]['user'] = $service['credentials']['username'];
-$cfg['Servers'][$i]['password'] = $service['credentials']['password'];
 $cfg['Servers'][$i]['connect_type'] = 'tcp';
 $cfg['Servers'][$i]['compress'] = false;
 /* Select mysql if your server does not have mysqli */
