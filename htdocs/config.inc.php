@@ -81,8 +81,8 @@ $cfg['PmaAbsoluteUri'] = 'http://' . $appCfg['uris'][0] . "/";
 /*
  * Directories for saving/loading files from server
  */
-$cfg['UploadDir'] = $_ENV['TEMPDIR'];
-$cfg['SaveDir'] = $_ENV['TEMPDIR'];
+$cfg['UploadDir'] = $_ENV['TMPDIR'];
+$cfg['SaveDir'] = $_ENV['TMPDIR'];
 
 /**
  * Defines whether a user should be displayed a "show all (records)"
