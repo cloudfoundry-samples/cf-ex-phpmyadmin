@@ -51,6 +51,7 @@ $cfg['Servers'][$i]['AllowNoPassword'] = false;
  */
 $appCfg = json_decode($_ENV['VCAP_APPLICATION'], true);
 $cfg['PmaAbsoluteUri'] = 'http://' . $appCfg['uris'][0] . "/";
+$cfg['LoginCookieValidity'] = 1800;
 
 /* User used to manipulate with storage */
 // $cfg['Servers'][$i]['controlhost'] = '';
