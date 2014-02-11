@@ -32,15 +32,15 @@ class Advisor
 
         // Step 1: Get some variables to evaluate on
         $this->variables = array_merge(
-            PMA_DBI_fetch_result('SHOW GLOBAL STATUS', 0, 1),
-            PMA_DBI_fetch_result('SHOW GLOBAL VARIABLES', 0, 1)
+            $GLOBALS['dbi']->fetchResult('SHOW GLOBAL STATUS', 0, 1),
+            $GLOBALS['dbi']->fetchResult('SHOW GLOBAL VARIABLES', 0, 1)
         );
         if (PMA_DRIZZLE) {
             $this->variables = array_merge(
                 $this->variables,
-                PMA_DBI_fetch_result(
-                    "SELECT concat('Com_', variable_name), variable_value
-                    FROM data_dictionary.GLOBAL_STATEMENTS", 0, 1
+                $GLOBALS['dbi']->fetchResult(
+                    "SELECT concat('Com_', variable_name), variable_value "
+                    . "FROM data_dictionary.GLOBAL_STATEMENTS", 0, 1
                 )
             );
         }
@@ -74,13 +74,16 @@ class Advisor
     {
         $this->runResult['errors'][] = $description
             . ' '
-            . sprintf(__('PHP threw following error: %s'), $exception->getMessage());
+            . sprintf(
+                __('PHP threw following error: %s'),
+                $exception->getMessage()
+            );
     }
 
     /**
      * Executes advisor rules
      *
-     * @return void
+     * @return boolean
      */
     function runRules()
     {
@@ -101,7 +104,7 @@ class Advisor
                 } catch (Exception $e) {
                     $this->storeError(
                         sprintf(
-                            __('Failed evaluating precondition for rule \'%s\''),
+                            __('Failed evaluating precondition for rule \'%s\'.'),
                             $rule['name']
                         ),
                         $e
@@ -118,7 +121,7 @@ class Advisor
                 } catch(Exception $e) {
                     $this->storeError(
                         sprintf(
-                            __('Failed calculating value for rule \'%s\''),
+                            __('Failed calculating value for rule \'%s\'.'),
                             $rule['name']
                         ),
                         $e
@@ -137,7 +140,7 @@ class Advisor
                 }  catch(Exception $e) {
                     $this->storeError(
                         sprintf(
-                            __('Failed running test for rule \'%s\''),
+                            __('Failed running test for rule \'%s\'.'),
                             $rule['name']
                         ),
                         $e
@@ -239,7 +242,8 @@ class Advisor
             // linking to server_variables.php
             $rule['recommendation'] = preg_replace(
                 '/\{([a-z_0-9]+)\}/Ui',
-                '<a href="server_variables.php?' . PMA_generate_common_url() . '&filter=\1">\1</a>',
+                '<a href="server_variables.php?' . PMA_URL_getCommon()
+                . '&filter=\1">\1</a>',
                 $this->translate($rule['recommendation'])
             );
 
@@ -260,7 +264,7 @@ class Advisor
      *
      * @param array $matches List of matched elements form preg_replace_callback
      *
-     * @return Replacement value
+     * @return string Replacement value
      */
     private function _replaceLinkURL($matches)
     {
@@ -272,7 +276,7 @@ class Advisor
      *
      * @param array $matches List of matched elements form preg_replace_callback
      *
-     * @return Replacement value
+     * @return string Replacement value
      */
     private function _ruleExprEvaluateFired($matches)
     {
@@ -296,15 +300,18 @@ class Advisor
      *
      * @param array $matches List of matched elements form preg_replace_callback
      *
-     * @return Replacement value
+     * @return string Replacement value
      */
     private function _ruleExprEvaluateVariable($matches)
     {
-        return isset($this->variables[$matches[1]])
-            ? (is_numeric($this->variables[$matches[1]])
-                ? $this->variables[$matches[1]]
-                : '"'.$this->variables[$matches[1]].'"')
-            : $matches[1];
+        if (! isset($this->variables[$matches[1]])) {
+            return $matches[1];
+        }
+        if (is_numeric($this->variables[$matches[1]])) {
+            return $this->variables[$matches[1]];
+        } else {
+            return '\'' . addslashes($this->variables[$matches[1]]) . '\'';
+        }
     }
 
     /**
@@ -316,7 +323,9 @@ class Advisor
      *                            that string position, but still evaluates the
      *                            whole expr
      *
-     * @return result of evaluated expression
+     * @return string result of evaluated expression
+     *
+     * @throws Exception
      */
     function ruleExprEvaluate($expr, $ignoreUntil = 0)
     {
@@ -351,7 +360,8 @@ class Advisor
         // Error handling
         if ($err) {
             throw new Exception(
-                strip_tags($err) . '<br />Executed code: $value = ' . htmlspecialchars($expr) . ';'
+                strip_tags($err)
+                . '<br />Executed code: $value = ' . htmlspecialchars($expr) . ';'
             );
         }
         return $value;
@@ -387,7 +397,7 @@ class Advisor
             if (substr($line, 0, 4) == 'rule') {
                 if ($ruleLine > 0) {
                     $errors[] = sprintf(
-                        __('Invalid rule declaration on line %1$s, expected line %2$s of previous rule'),
+                        __('Invalid rule declaration on line %1$s, expected line %2$s of previous rule.'),
                         $i + 1,
                         $ruleSyntax[$ruleLine++]
                     );
@@ -404,7 +414,7 @@ class Advisor
                     }
                 } else {
                     $errors[] = sprintf(
-                        __('Invalid rule declaration on line %s'),
+                        __('Invalid rule declaration on line %s.'),
                         $i + 1
                     );
                 }
@@ -412,7 +422,7 @@ class Advisor
             } else {
                 if ($ruleLine == -1) {
                     $errors[] = sprintf(
-                        __('Unexpected characters on line %s'),
+                        __('Unexpected characters on line %s.'),
                         $i + 1
                     );
                 }
@@ -426,7 +436,7 @@ class Advisor
                 // Non tabbed lines are not
                 if ($line[0] != "\t") {
                     $errors[] = sprintf(
-                        __('Unexpected character on line %1$s. Expected tab, but found "%2$s"'),
+                        __('Unexpected character on line %1$s. Expected tab, but found "%2$s".'),
                         $i + 1,
                         $line[0]
                     );
@@ -451,9 +461,9 @@ class Advisor
  * Formats interval like 10 per hour
  *
  * @param integer $num       number to format
- * @param intefer $precision required precision
+ * @param integer $precision required precision
  *
- * @return formatted string
+ * @return string formatted string
  */
 function ADVISOR_bytime($num, $precision)
 {

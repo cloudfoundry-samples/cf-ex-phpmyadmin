@@ -75,10 +75,10 @@ class PMA_StorageEngine
                         JOIN data_dictionary.modules m USING (module_name)
                     WHERE p.plugin_type = 'StorageEngine'
                         AND p.plugin_name NOT IN ('FunctionEngine', 'schema')";
-                $storage_engines = PMA_DBI_fetch_result($sql, 'Engine');
+                $storage_engines = $GLOBALS['dbi']->fetchResult($sql, 'Engine');
             } else {
                 $storage_engines
-                    = PMA_DBI_fetch_result('SHOW STORAGE ENGINES', 'Engine');
+                    = $GLOBALS['dbi']->fetchResult('SHOW STORAGE ENGINES', 'Engine');
             }
         }
 
@@ -138,7 +138,7 @@ class PMA_StorageEngine
      *
      * @param string $engine The engine ID
      *
-     * @return object  The engine plugin
+     * @return PMA_StorageEngine The engine plugin
      */
     static public function getEngine($engine)
     {
@@ -259,8 +259,8 @@ class PMA_StorageEngine
         $mysql_vars = array();
 
         $sql_query = 'SHOW GLOBAL VARIABLES ' . $like . ';';
-        $res = PMA_DBI_query($sql_query);
-        while ($row = PMA_DBI_fetch_assoc($res)) {
+        $res = $GLOBALS['dbi']->query($sql_query);
+        while ($row = $GLOBALS['dbi']->fetchAssoc($res)) {
             if (isset($variables[$row['Variable_name']])) {
                 $mysql_vars[$row['Variable_name']] = $variables[$row['Variable_name']];
             } elseif (! $like
@@ -279,7 +279,7 @@ class PMA_StorageEngine
                     = PMA_ENGINE_DETAILS_TYPE_PLAINTEXT;
             }
         }
-        PMA_DBI_free_result($res);
+        $GLOBALS['dbi']->freeResult($res);
 
         return $mysql_vars;
     }

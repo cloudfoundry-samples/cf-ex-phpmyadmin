@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installation &mdash; phpMyAdmin 4.0.4 documentation</title>
+    <title>Installation &mdash; phpMyAdmin 4.1.7 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '4.0.4',
+        VERSION:     '4.1.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="copyright" title="Copyright" href="copyright.html" />
-    <link rel="top" title="phpMyAdmin 4.0.4 documentation" href="index.html" />
+    <link rel="top" title="phpMyAdmin 4.1.7 documentation" href="index.html" />
     <link rel="next" title="Configuration" href="config.html" />
     <link rel="prev" title="Requirements" href="require.html" /> 
   </head>
@@ -43,7 +43,7 @@
         <li class="right" >
           <a href="require.html" title="Requirements"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">phpMyAdmin 4.0.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">phpMyAdmin 4.1.7 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -65,6 +65,64 @@ page can be used for this.</p>
 to resave as in BBEdit to Unix style ALL phpMyAdmin scripts before
 uploading them to your server, as PHP seems not to like <a class="reference internal" href="glossary.html#term-mac"><em class="xref std std-term">Mac</em></a>-style
 end of lines character (&#8220;<tt class="docutils literal"><span class="pre">\r</span></tt>&#8221;).</p>
+</div>
+<div class="section" id="linux-distributions">
+<h2>Linux distributions<a class="headerlink" href="#linux-distributions" title="Permalink to this headline">¶</a></h2>
+<p>phpMyAdmin is included in most Linux distributions. It is recommended to use
+distribution packages when possible - they usually provide integration to your
+distribution and you will automatically get security updates from your distribution.</p>
+<div class="section" id="debian">
+<h3>Debian<a class="headerlink" href="#debian" title="Permalink to this headline">¶</a></h3>
+<p>Debian&#8217;s package repositories include a phpMyAdmin package, but be aware that
+the configuration file is maintained in <tt class="docutils literal"><span class="pre">/etc/phpmyadmin</span></tt> and may differ in
+some ways from the official phpMyAdmin documentation.</p>
+</div>
+<div class="section" id="opensuse">
+<h3>OpenSUSE<a class="headerlink" href="#opensuse" title="Permalink to this headline">¶</a></h3>
+<p>OpenSUSE already comes with phpMyAdmin package, just install packages from
+the <a class="reference external" href="http://software.opensuse.org/package/phpMyAdmin">openSUSE Build Service</a>.</p>
+</div>
+<div class="section" id="ubuntu">
+<h3>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h3>
+<p>Ubuntu ships phpMyAdmin package, however if you want to use recent version, you
+can use packages from
+<a class="reference external" href="https://launchpad.net/~nijel/+archive/phpmyadmin">PPA for Michal Čihař</a>.</p>
+</div>
+<div class="section" id="gentoo">
+<h3>Gentoo<a class="headerlink" href="#gentoo" title="Permalink to this headline">¶</a></h3>
+<p>Gentoo ships the phpMyAdmin package, both in a near stock configuration as well
+as in a <tt class="docutils literal"><span class="pre">webapp-config</span></tt> configuration. Use <tt class="docutils literal"><span class="pre">emerge</span> <span class="pre">dev-db/phpmyadmin</span></tt> to
+install.</p>
+</div>
+<div class="section" id="mandriva">
+<h3>Mandriva<a class="headerlink" href="#mandriva" title="Permalink to this headline">¶</a></h3>
+<p>Mandriva ships the phpMyAdmin package in their <tt class="docutils literal"><span class="pre">contrib</span></tt> branch and can be
+installed via the usual Control Center.</p>
+</div>
+<div class="section" id="fedora">
+<h3>Fedora<a class="headerlink" href="#fedora" title="Permalink to this headline">¶</a></h3>
+<p>Fedora ships the phpMyAdmin package, but be aware that the configuration file
+is maintained in <tt class="docutils literal"><span class="pre">/etc/phpMyAdmin/</span></tt> and may differ in some ways from the
+official phpMyAdmin documentation.</p>
+</div>
+<div class="section" id="red-hat-enterprise-linux">
+<h3>Red Hat Enterprise Linux<a class="headerlink" href="#red-hat-enterprise-linux" title="Permalink to this headline">¶</a></h3>
+<p>Red Hat Enterprise Linux itself and thus derivatives like CentOS don&#8217;t
+ship phpMyAdmin, but the Fedora-driven repository
+<a class="reference external" href="http://fedoraproject.org/wiki/EPEL">Extra Packages for Enterprise Linux (EPEL)</a>
+is doing so, if it&#8217;s
+<a class="reference external" href="http://fedoraproject.org/wiki/EPEL/FAQ#howtouse">enabled</a>.
+But be aware that the configuration file is maintained in
+<tt class="docutils literal"><span class="pre">/etc/phpMyAdmin/</span></tt> and may differ in some ways from the
+official phpMyAdmin documentation.</p>
+</div>
+</div>
+<div class="section" id="installing-on-windows">
+<h2>Installing on Windows<a class="headerlink" href="#installing-on-windows" title="Permalink to this headline">¶</a></h2>
+<p>The easiest way to get phpMyAdmin on Windows is using third party products
+which include phpMyAdmin together with a database and web server such as
+<a class="reference external" href="http://www.apachefriends.org/en/xampp.html">XAMPP</a>.</p>
+<p>You can find more of such options at <a class="reference external" href="https://en.wikipedia.org/wiki/List_of_AMP_packages">Wikipedia</a>.</p>
 </div>
 <div class="section" id="quick-install">
 <span id="id1"></span><h2>Quick Install<a class="headerlink" href="#quick-install" title="Permalink to this headline">¶</a></h2>
@@ -90,8 +148,8 @@ for those who prefer a graphical installation. Creating a
 <tt class="file docutils literal"><span class="pre">config.inc.php</span></tt> is still a quick way to get started and needed for
 some advanced features.</li>
 </ol>
-<div class="section" id="manualy-creating-file">
-<h3>Manualy creating file<a class="headerlink" href="#manualy-creating-file" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="manually-creating-the-file">
+<h3>Manually creating the file<a class="headerlink" href="#manually-creating-the-file" title="Permalink to this headline">¶</a></h3>
 <p>To manually create the file, simply use your text editor to create the
 file <tt class="file docutils literal"><span class="pre">config.inc.php</span></tt> (you can copy <tt class="file docutils literal"><span class="pre">config.sample.inc.php</span></tt> to get
 minimal configuration file) in the main (top-level) phpMyAdmin
@@ -101,24 +159,24 @@ with anything found in <tt class="file docutils literal"><span class="pre">confi
 okay for a particular setting, there is no need to include it in
 <tt class="file docutils literal"><span class="pre">config.inc.php</span></tt>. You&#8217;ll need a few directives to get going, a
 simple configuration may look like this:</p>
-<div class="highlight-php"><div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight-xml+php"><div class="highlight"><pre><span class="cp">&lt;?php</span>
 <span class="nv">$cfg</span><span class="p">[</span><span class="s1">&#39;blowfish_secret&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ba17c1ec07d65003&#39;</span><span class="p">;</span>  <span class="c1">// use here a value of your choice</span>
 
 <span class="nv">$i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 <span class="nv">$i</span><span class="o">++</span><span class="p">;</span>
 <span class="nv">$cfg</span><span class="p">[</span><span class="s1">&#39;Servers&#39;</span><span class="p">][</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;auth_type&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="s1">&#39;cookie&#39;</span><span class="p">;</span>
-<span class="cp">?&gt;</span><span class="x"></span>
+<span class="cp">?&gt;</span>
 </pre></div>
 </div>
 <p>Or, if you prefer to not be prompted every time you log in:</p>
-<div class="highlight-php"><div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight-xml+php"><div class="highlight"><pre><span class="cp">&lt;?php</span>
 
 <span class="nv">$i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 <span class="nv">$i</span><span class="o">++</span><span class="p">;</span>
 <span class="nv">$cfg</span><span class="p">[</span><span class="s1">&#39;Servers&#39;</span><span class="p">][</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;user&#39;</span><span class="p">]</span>          <span class="o">=</span> <span class="s1">&#39;root&#39;</span><span class="p">;</span>
 <span class="nv">$cfg</span><span class="p">[</span><span class="s1">&#39;Servers&#39;</span><span class="p">][</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;password&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="s1">&#39;cbb74bc&#39;</span><span class="p">;</span> <span class="c1">// use here your password</span>
 <span class="nv">$cfg</span><span class="p">[</span><span class="s1">&#39;Servers&#39;</span><span class="p">][</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;auth_type&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="s1">&#39;config&#39;</span><span class="p">;</span>
-<span class="cp">?&gt;</span><span class="x"></span>
+<span class="cp">?&gt;</span>
 </pre></div>
 </div>
 <p>For a full explanation of possible configuration values, see the
@@ -143,14 +201,15 @@ chmod o+w config/config.inc.php     <span class="c"># give it world writable per
 <p>On other platforms, simply create the folder and ensure that your web
 server has read and write access to it. <a class="reference internal" href="faq.html#faq1-26"><em>1.26 I just installed phpMyAdmin in my document root of IIS but I get the error &#8220;No input file specified&#8221; when trying to run phpMyAdmin.</em></a> can help with
 this.</p>
-<p>Next, open <tt class="docutils literal"><span class="pre">setup/</span></tt> in your browser. Note that <strong>changes are
-not saved to disk until explicitly choose ``Save``</strong> from the
-<em>Configuration</em> area of the screen. Normally the script saves the new
+<p>Next, open <tt class="docutils literal"><span class="pre">setup/</span></tt> in your browser. If you have an existing configuration,
+use the <tt class="docutils literal"><span class="pre">Load</span></tt> button to bring its content inside the setup panel.
+Note that <strong>changes are not saved to disk until explicitly choose ``Save``</strong>
+from the <em>Configuration</em> area of the screen. Normally the script saves the new
 <tt class="file docutils literal"><span class="pre">config.inc.php</span></tt> to the <tt class="docutils literal"><span class="pre">config/</span></tt> directory, but if the webserver does
 not have the proper permissions you may see the error &#8220;Cannot load or
 save configuration.&#8221; Ensure that the <tt class="docutils literal"><span class="pre">config/</span></tt> directory exists and
 has the proper permissions - or use the <tt class="docutils literal"><span class="pre">Download</span></tt> link to save the
-config file locally and upload (via FTP or some similar means) to the
+config file locally and upload it (via FTP or some similar means) to the
 proper location.</p>
 <p>Once the file has been saved, it must be moved out of the <tt class="docutils literal"><span class="pre">config/</span></tt>
 directory and the permissions must be reset, again as a security
@@ -258,8 +317,6 @@ the controlpass, but <strong>this is only an example: use something else in your
 file!</strong> Input these statements from the phpMyAdmin <a class="reference internal" href="glossary.html#term-sql"><em class="xref std std-term">SQL</em></a> Query window or
 mysql command–line client. Of course you have to replace <tt class="docutils literal"><span class="pre">localhost</span></tt> with the
 webserver&#8217;s host if it&#8217;s not the same as the MySQL server&#8217;s one.</p>
-<p>If you want to use the many new relation and bookmark features:  (this of
-course requires that your <a class="reference internal" href="#linked-tables"><em>phpMyAdmin configuration storage</em></a> be set up).</p>
 <div class="highlight-mysql"><div class="highlight"><pre><span class="k">GRANT</span> <span class="k">USAGE</span> <span class="k">ON</span> <span class="n">mysql</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;pma&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span> <span class="n">IDENTIFIED</span> <span class="k">BY</span> <span class="s1">&#39;pmapass&#39;</span><span class="p">;</span>
 <span class="k">GRANT</span> <span class="k">SELECT</span> <span class="p">(</span>
 <span class="n">Host</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">Select_priv</span><span class="p">,</span> <span class="n">Insert_priv</span><span class="p">,</span> <span class="n">Update_priv</span><span class="p">,</span> <span class="n">Delete_priv</span><span class="p">,</span>
@@ -278,8 +335,7 @@ course requires that your <a class="reference internal" href="#linked-tables"><e
 <div class="highlight-mysql"><div class="highlight"><pre><span class="k">GRANT</span> <span class="k">SELECT</span><span class="p">,</span> <span class="k">INSERT</span><span class="p">,</span> <span class="k">UPDATE</span><span class="p">,</span> <span class="k">DELETE</span> <span class="k">ON</span> <span class="o">&lt;</span><span class="n">pma_db</span><span class="o">&gt;</span><span class="p">.</span><span class="o">*</span> <span class="k">TO</span> <span class="s1">&#39;pma&#39;</span><span class="o">@</span><span class="s1">&#39;localhost&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>(this of course requires that your phpMyAdmin
-configuration storage be set up).</p>
+<p>(this of course requires that your <a class="reference internal" href="#linked-tables"><em>phpMyAdmin configuration storage</em></a> be set up).</p>
 <p>Then each of the <em>true</em> users should be granted a set of privileges
 on a set of particular databases. Normally you shouldn&#8217;t give global
 privileges to an ordinary user, unless you understand the impact of those
@@ -365,7 +421,7 @@ requires the users&#8217;s Swekey to be plugged before entering the login
 page (currently supported for cookie authentication mode only). Swekey
 Authentication is disabled by default. To enable it, add the following
 line to <tt class="file docutils literal"><span class="pre">config.inc.php</span></tt>:</p>
-<div class="highlight-php"><div class="highlight"><pre><span class="x">$cfg[&#39;Servers&#39;][$i][&#39;auth_swekey_config&#39;] = &#39;/etc/swekey.conf&#39;;</span>
+<div class="highlight-php"><div class="highlight"><pre><span class="nv">$cfg</span><span class="p">[</span><span class="s1">&#39;Servers&#39;</span><span class="p">][</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;auth_swekey_config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;/etc/swekey.conf&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>You then have to create the <tt class="docutils literal"><span class="pre">swekey.conf</span></tt> file that will associate
@@ -389,14 +445,15 @@ are always ways to make your installation more secure:</p>
 <ul class="simple">
 <li>remove <tt class="docutils literal"><span class="pre">setup</span></tt> directory from phpMyAdmin, you will probably not
 use it after initial setup</li>
-<li>prevent access to <tt class="docutils literal"><span class="pre">libraries</span></tt> directory from browser,
-as it is not needed, supplied <tt class="docutils literal"><span class="pre">.htaccess</span></tt> file does this</li>
 <li>properly choose authentication method - <a class="reference internal" href="#cookie"><em>Cookie authentication mode</em></a>
 is probably the best choice for shared hosting</li>
 <li>in case you don&#8217;t want all MySQL users to be able to access
 phpMyAdmin, you can use <span class="target" id="index-23"></span><a class="reference internal" href="config.html#cfg_Servers_AllowDeny_rules"><tt class="xref config config-option docutils literal"><span class="pre">$cfg['Servers'][$i]['AllowDeny']['rules']</span></tt></a> to limit them</li>
 <li>consider hiding phpMyAdmin behind authentication proxy, so that
 MySQL credentials are not all users need to login</li>
+<li>if you are afraid of automated attacks, enabling Captcha by
+<span class="target" id="index-24"></span><a class="reference internal" href="config.html#cfg_CaptchaLoginPublicKey"><tt class="xref config config-option docutils literal"><span class="pre">$cfg['CaptchaLoginPublicKey']</span></tt></a> and
+<span class="target" id="index-25"></span><a class="reference internal" href="config.html#cfg_CaptchaLoginPrivateKey"><tt class="xref config config-option docutils literal"><span class="pre">$cfg['CaptchaLoginPrivateKey']</span></tt></a> might be an option.</li>
 </ul>
 </div>
 </div>
@@ -410,8 +467,19 @@ MySQL credentials are not all users need to login</li>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#linux-distributions">Linux distributions</a><ul>
+<li><a class="reference internal" href="#debian">Debian</a></li>
+<li><a class="reference internal" href="#opensuse">OpenSUSE</a></li>
+<li><a class="reference internal" href="#ubuntu">Ubuntu</a></li>
+<li><a class="reference internal" href="#gentoo">Gentoo</a></li>
+<li><a class="reference internal" href="#mandriva">Mandriva</a></li>
+<li><a class="reference internal" href="#fedora">Fedora</a></li>
+<li><a class="reference internal" href="#red-hat-enterprise-linux">Red Hat Enterprise Linux</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#installing-on-windows">Installing on Windows</a></li>
 <li><a class="reference internal" href="#quick-install">Quick Install</a><ul>
-<li><a class="reference internal" href="#manualy-creating-file">Manualy creating file</a></li>
+<li><a class="reference internal" href="#manually-creating-the-file">Manually creating the file</a></li>
 <li><a class="reference internal" href="#using-setup-script">Using Setup script</a></li>
 </ul>
 </li>
@@ -470,7 +538,7 @@ MySQL credentials are not all users need to login</li>
         <li class="right" >
           <a href="require.html" title="Requirements"
              >previous</a> |</li>
-        <li><a href="index.html">phpMyAdmin 4.0.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">phpMyAdmin 4.1.7 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

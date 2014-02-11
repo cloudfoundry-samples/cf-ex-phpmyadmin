@@ -258,19 +258,19 @@ class PMA_DbQbe
                 $this->_criteriaTables[$each_table] = ' selected="selected"';
             }
         } // end if
-        $all_tables = PMA_DBI_query(
+        $all_tables = $GLOBALS['dbi']->query(
             'SHOW TABLES FROM ' . PMA_Util::backquote($this->_db) . ';',
             null,
-            PMA_DBI_QUERY_STORE
+            PMA_DatabaseInterface::QUERY_STORE
         );
-        $all_tables_count = PMA_DBI_num_rows($all_tables);
+        $all_tables_count = $GLOBALS['dbi']->numRows($all_tables);
         if (0 == $all_tables_count) {
             PMA_Message::error(__('No tables found in database.'))->display();
             exit;
         }
         // The tables list gets from MySQL
-        while (list($table) = PMA_DBI_fetch_row($all_tables)) {
-            $columns = PMA_DBI_get_columns($this->_db, $table);
+        while (list($table) = $GLOBALS['dbi']->fetchRow($all_tables)) {
+            $columns = $GLOBALS['dbi']->getColumns($this->_db, $table);
 
             if (empty($this->_criteriaTables[$table])
                 && ! empty($_REQUEST['TableList'])
@@ -296,7 +296,7 @@ class PMA_DbQbe
                 } // end foreach
             } // end if
         } // end while
-        PMA_DBI_free_result($all_tables);
+        $GLOBALS['dbi']->freeResult($all_tables);
 
         // sets the largest width found
         $this->_realwidth = $this->_form_column_width . 'ex';
@@ -307,7 +307,7 @@ class PMA_DbQbe
      * @param integer $column_number Column Number (0,1,2) or more
      * @param string  $selected      Selected criteria column name
      *
-     * @return HTML for select options
+     * @return string HTML for select options
      */
     private function _showColumnSelectCell($column_number, $selected = '')
     {
@@ -333,7 +333,7 @@ class PMA_DbQbe
      * @param string  $asc_selected  Selected criteria 'Ascending'
      * @param string  $desc_selected Selected criteria 'Descending'
      *
-     * @return HTML for select options
+     * @return string HTML for select options
      */
     private function _getSortSelectCell($column_number, $asc_selected = '',
         $desc_selected = ''
@@ -356,12 +356,12 @@ class PMA_DbQbe
     /**
      * Provides search form's row containing column select options
      *
-     * @return HTML for search table's row
+     * @return string HTML for search table's row
      */
     private function _getColumnNamesRow()
     {
         $html_output = '<tr class="odd noclick">';
-        $html_output .= '<th>' . __('Column') . ':</th>';
+        $html_output .= '<th>' . __('Column:') . '</th>';
         $new_column_count = 0;
         for ($column_index = 0; $column_index < $this->_criteria_column_count; $column_index++) {
             if (isset($this->_criteriaColumnInsert[$column_index])
@@ -398,12 +398,12 @@ class PMA_DbQbe
     /**
      * Provides search form's row containing sort(ASC/DESC) select options
      *
-     * @return HTML for search table's row
+     * @return string HTML for search table's row
      */
     private function _getSortRow()
     {
         $html_output = '<tr class="even noclick">';
-        $html_output .= '<th>' . __('Sort') . ':</th>';
+        $html_output .= '<th>' . __('Sort:') . '</th>';
         $new_column_count = 0;
         for ($column_index = 0; $column_index < $this->_criteria_column_count; $column_index++) {
             if (! empty($this->_criteriaColumnInsert)
@@ -460,12 +460,12 @@ class PMA_DbQbe
     /**
      * Provides search form's row containing SHOW checkboxes
      *
-     * @return HTML for search table's row
+     * @return string HTML for search table's row
      */
     private function _getShowRow()
     {
         $html_output = '<tr class="odd noclick">';
-        $html_output .= '<th>' . __('Show') . ':</th>';
+        $html_output .= '<th>' . __('Show:') . '</th>';
         $new_column_count = 0;
         for ($column_index = 0; $column_index < $this->_criteria_column_count; $column_index++) {
             if (! empty($this->_criteriaColumnInsert)
@@ -505,12 +505,12 @@ class PMA_DbQbe
     /**
      * Provides search form's row containing criteria Inputboxes
      *
-     * @return HTML for search table's row
+     * @return string HTML for search table's row
      */
     private function _getCriteriaInputboxRow()
     {
         $html_output = '<tr class="even noclick">';
-        $html_output .= '<th>' . __('Criteria') . ':</th>';
+        $html_output .= '<th>' . __('Criteria:') . '</th>';
         $new_column_count = 0;
         for ($column_index = 0; $column_index < $this->_criteria_column_count; $column_index++) {
             if (! empty($this->_criteriaColumnInsert)
@@ -548,7 +548,9 @@ class PMA_DbQbe
             $html_output .= '<td class="center">';
             $html_output .= '<input type="hidden"'
                 . ' name="prev_criteria[' . $new_column_count . ']"'
-                . ' value="' . htmlspecialchars($this->_curCriteria[$new_column_count]) . '" />';
+                . ' value="'
+                . htmlspecialchars($this->_curCriteria[$new_column_count])
+                . '" />';
             $html_output .= '<input type="text"'
                 . ' name="criteria[' . $new_column_count . ']"'
                 . ' value="' . htmlspecialchars($tmp_criteria) . '"'
@@ -567,7 +569,7 @@ class PMA_DbQbe
      *
      * @param string $type Whether row or column
      *
-     * @return HTML for footer options
+     * @return string HTML for footer options
      */
     private function _getFootersOptions($type)
     {
@@ -591,7 +593,7 @@ class PMA_DbQbe
     /**
      * Provides search form table's footer options
      *
-     * @return HTML for table footer
+     * @return string HTML for table footer
      */
     private function _getTableFooters()
     {
@@ -609,7 +611,7 @@ class PMA_DbQbe
     /**
      * Provides a select list of database tables
      *
-     * @return HTML for table select list
+     * @return string HTML for table select list
      */
     private function _getTablesList()
     {
@@ -645,16 +647,16 @@ class PMA_DbQbe
      * @param integer $column_number Column Number (0,1,2) or more
      * @param array   $selected      Selected criteria column name
      *
-     * @return HTML for modification cell
+     * @return string HTML for modification cell
      */
     private function _getAndOrColCell($column_number, $selected = null)
     {
         $html_output = '<td class="center">';
-        $html_output .= '<strong>' . __('Or') . ':</strong>';
+        $html_output .= '<strong>' . __('Or:') . '</strong>';
         $html_output .= '<input type="radio"'
             . ' name="criteriaAndOrColumn[' . $column_number . ']"'
             . ' value="or"' . $selected['or'] . ' />';
-        $html_output .= '&nbsp;&nbsp;<strong>' . __('And') . ':</strong>';
+        $html_output .= '&nbsp;&nbsp;<strong>' . __('And:') . '</strong>';
         $html_output .= '<input type="radio"'
             . ' name="criteriaAndOrColumn[' . $column_number . ']"'
             . ' value="and"' . $selected['and'] . ' />';
@@ -672,14 +674,18 @@ class PMA_DbQbe
      * Provides search form's row containing column modifications options
      * (For modifying search form's table columns)
      *
-     * @return HTML for search table's row
+     * @return string HTML for search table's row
      */
     private function _getModifyColumnsRow()
     {
         $html_output = '<tr class="even noclick">';
-        $html_output .= '<th>' . __('Modify') . ':</th>';
+        $html_output .= '<th>' . __('Modify:') . '</th>';
         $new_column_count = 0;
-        for ($column_index = 0; $column_index < $this->_criteria_column_count; $column_index++) {
+        for (
+        $column_index = 0;
+        $column_index < $this->_criteria_column_count;
+        $column_index++
+        ) {
             if (! empty($this->_criteriaColumnInsert)
                 && isset($this->_criteriaColumnInsert[$column_index])
                 && $this->_criteriaColumnInsert[$column_index] == 'on'
@@ -725,7 +731,7 @@ class PMA_DbQbe
      * @param integer $row_index       Number of criteria row
      * @param string  $checked_options If checked
      *
-     * @return HTML
+     * @return string HTML
      */
     private function _getInsDelAndOrCell($row_index, $checked_options)
     {
@@ -734,12 +740,12 @@ class PMA_DbQbe
         $html_output .= '<table class="nospacing nopadding">';
         $html_output .= '<tr>';
         $html_output .= '<td class="' . $GLOBALS['cell_align_right'] . ' nowrap">';
-        $html_output .= '<small>' . __('Ins') . ':</small>';
+        $html_output .= '<small>' . __('Ins:') . '</small>';
         $html_output .= '<input type="checkbox"'
             . ' name="criteriaRowInsert[' . $row_index . ']" />';
         $html_output .= '</td>';
         $html_output .= '<td class="' . $GLOBALS['cell_align_right'] . '">';
-        $html_output .= '<strong>' . __('And') . ':</strong>';
+        $html_output .= '<strong>' . __('And:') . '</strong>';
         $html_output .= '</td>';
         $html_output .= '<td>';
         $html_output .= '<input type="radio"'
@@ -749,12 +755,12 @@ class PMA_DbQbe
         $html_output .= '</tr>';
         $html_output .= '<tr>';
         $html_output .= '<td class="' . $GLOBALS['cell_align_right'] . ' nowrap">';
-        $html_output .= '<small>' . __('Del') . ':</small>';
+        $html_output .= '<small>' . __('Del:') . '</small>';
         $html_output .= '<input type="checkbox"'
             . ' name="criteriaRowDelete[' . $row_index . ']" />';
         $html_output .= '</td>';
         $html_output .= '<td class="' . $GLOBALS['cell_align_right'] . '">';
-        $html_output .= '<strong>' . __('Or') . ':</strong>';
+        $html_output .= '<strong>' . __('Or:') . '</strong>';
         $html_output .= '</td>';
         $html_output .= '<td>';
         $html_output .= '<input type="radio"'
@@ -774,7 +780,7 @@ class PMA_DbQbe
      * @param integer $new_row_index New row index if rows are added/deleted
      * @param integer $row_index     Row index
      *
-     * @return HTML table rows
+     * @return string HTML table rows
      */
     private function _getInputboxRow($new_row_index, $row_index)
     {
@@ -823,14 +829,18 @@ class PMA_DbQbe
      * Provides rows for criteria inputbox Insert/Delete options
      * with AND/OR relationship modification options
      *
-     * @return HTML table rows
+     * @return string HTML table rows
      */
     private function _getInsDelAndOrCriteriaRows()
     {
         $html_output = '';
         $new_row_count = 0;
         $odd_row = true;
-        for ($row_index = 0; $row_index <= $this->_criteria_row_count; $row_index++) {
+        for (
+        $row_index = 0;
+        $row_index <= $this->_criteria_row_count;
+        $row_index++
+        ) {
             if (isset($this->_criteriaRowInsert[$row_index])
                 && $this->_criteriaRowInsert[$row_index] == 'on'
             ) {
@@ -883,7 +893,7 @@ class PMA_DbQbe
     /**
      * Provides SELECT clause for building SQL query
      *
-     * @return Select clause
+     * @return string Select clause
      */
     private function _getSelectClause()
     {
@@ -907,20 +917,25 @@ class PMA_DbQbe
     /**
      * Provides WHERE clause for building SQL query
      *
-     * @return Where clause
+     * @return string Where clause
      */
     private function _getWhereClause()
     {
         $where_clause = '';
         $criteria_cnt = 0;
-        for ($column_index = 0; $column_index < $this->_criteria_column_count; $column_index++) {
+        for (
+        $column_index = 0;
+        $column_index < $this->_criteria_column_count;
+        $column_index++
+        ) {
             if (! empty($this->_curField[$column_index])
                 && ! empty($this->_curCriteria[$column_index])
                 && $column_index
                 && isset($last_where)
                 && isset($this->_curAndOrCol)
             ) {
-                $where_clause .= ' ' . strtoupper($this->_curAndOrCol[$last_where]) . ' ';
+                $where_clause .= ' '
+                    . strtoupper($this->_curAndOrCol[$last_where]) . ' ';
             }
             if (! empty($this->_curField[$column_index])
                 && ! empty($this->_curCriteria[$column_index])
@@ -938,23 +953,32 @@ class PMA_DbQbe
         if (! isset($this->_curAndOrRow)) {
             $this->_curAndOrRow = array();
         }
-        for ($row_index = 0; $row_index <= $this->_criteria_row_count; $row_index++) {
+        for (
+        $row_index = 0;
+        $row_index <= $this->_criteria_row_count;
+        $row_index++
+        ) {
             $criteria_cnt = 0;
             $qry_orwhere = '';
             $last_orwhere = '';
-            for ($column_index = 0; $column_index < $this->_criteria_column_count; $column_index++) {
+            for (
+            $column_index = 0;
+            $column_index < $this->_criteria_column_count;
+            $column_index++
+            ) {
                 if (! empty($this->_curField[$column_index])
-                    && ! empty(${'curOr' . $row_index}[$column_index])
+                    && ! empty($_REQUEST['Or' .$row_index][$column_index])
                     && $column_index
                 ) {
-                    $qry_orwhere .= ' ' . strtoupper($this->_curAndOrCol[$last_orwhere]) . ' ';
+                    $qry_orwhere .= ' '
+                        . strtoupper($this->_curAndOrCol[$last_orwhere]) . ' ';
                 }
                 if (! empty($this->_curField[$column_index])
-                    && ! empty(${'curOr' . $row_index}[$column_index])
+                    && ! empty($_REQUEST['Or' .$row_index][$column_index])
                 ) {
                     $qry_orwhere .= '(' . $this->_curField[$column_index]
                         .  ' '
-                        .  ${'curOr' . $row_index}[$column_index]
+                        .  $_REQUEST['Or' .$row_index][$column_index]
                         .  ')';
                     $last_orwhere = $column_index;
                     $criteria_cnt++;
@@ -983,13 +1007,17 @@ class PMA_DbQbe
     /**
      * Provides ORDER BY clause for building SQL query
      *
-     * @return Order By clause
+     * @return string Order By clause
      */
     private function _getOrderByClause()
     {
         $orderby_clause = '';
         $orderby_clauses = array();
-        for ($column_index = 0; $column_index < $this->_criteria_column_count; $column_index++) {
+        for (
+        $column_index = 0;
+        $column_index < $this->_criteria_column_count;
+        $column_index++
+        ) {
             // if all columns are chosen with * selector,
             // then sorting isn't available
             // Fix for Bug #570698
@@ -1026,7 +1054,7 @@ class PMA_DbQbe
         $index_columns = array();
 
         foreach ($all_tables as $table) {
-            $indexes = PMA_DBI_get_table_indexes($this->_db, $table);
+            $indexes = $GLOBALS['dbi']->getTableIndexes($this->_db, $table);
             foreach ($indexes as $index) {
                 $column = $table . '.' . $index['Column_name'];
                 if (isset($all_columns[$column])) {
@@ -1065,7 +1093,7 @@ class PMA_DbQbe
     private function _getLeftJoinColumnCandidates($all_tables, $all_columns,
         $where_clause_columns
     ) {
-        PMA_DBI_select_db($this->_db);
+        $GLOBALS['dbi']->selectDb($this->_db);
         $candidate_columns = array();
 
         // Get unique columns and index columns
@@ -1182,7 +1210,11 @@ class PMA_DbQbe
         $where_clause_columns = array();
         $where_clause_tables = array();
         // Now we need all tables that we have in the where clause
-        for ($column_index = 0; $column_index < count($this->_criteria); $column_index++) {
+        for (
+        $column_index = 0;
+        $column_index < count($this->_criteria);
+        $column_index++
+        ) {
             $current_table = explode('.', $_POST['criteriaColumn'][$column_index]);
             if (empty($current_table[0]) || empty($current_table[1])) {
                 continue;
@@ -1219,8 +1251,7 @@ class PMA_DbQbe
         $from_clause = '';
         if (isset($_POST['criteriaColumn']) && count($_POST['criteriaColumn']) > 0) {
             // Initialize some variables
-            $all_tables = $all_columns = $known_tables = $remaining_tables = array();
-            $left_join = '';
+            $all_tables = $all_columns = array();
 
             // We only start this if we have fields, otherwise it would be dumb
             foreach ($_POST['criteriaColumn'] as $value) {
@@ -1305,7 +1336,7 @@ class PMA_DbQbe
         $url_params['db'] = $this->_db;
         $url_params['criteriaColumnCount'] = $this->_new_column_count;
         $url_params['rows'] = $this->_new_row_count;
-        $html_output .= PMA_generate_common_hidden_inputs($url_params);
+        $html_output .= PMA_URL_getHiddenInputs($url_params);
         $html_output .= '</fieldset>';
         // get footers
         $html_output .= $this->_getTableFooters();
@@ -1313,7 +1344,7 @@ class PMA_DbQbe
         $html_output .= $this->_getTablesList();
         $html_output .= '</form>';
         $html_output .= '<form action="db_qbe.php" method="post">';
-        $html_output .= PMA_generate_common_hidden_inputs(array('db' => $this->_db));
+        $html_output .= PMA_URL_getHiddenInputs(array('db' => $this->_db));
         // get SQL query
         $html_output .= '<div class="floatleft">';
         $html_output .= '<fieldset>';

@@ -57,18 +57,20 @@ $forms['Servers']['Server_config'] = array('Servers' => array(1 => array(
     'hide_db',
     'AllowRoot',
     'AllowNoPassword',
-    'DisableIS',
     'AllowDeny/order',
-    'AllowDeny/rules',
-    'ShowDatabasesCommand')));
+    'AllowDeny/rules')));
 $forms['Servers']['Server_pmadb'] = array('Servers' => array(1 => array(
     'pmadb' => 'phpmyadmin',
     'controlhost',
+    'controlport',
     'controluser',
     'controlpass',
     'bookmarktable' => 'pma__bookmark',
     'relation' => 'pma__relation',
     'userconfig' => 'pma__userconfig',
+    'users' => 'pma__users',
+    'usergroups' => 'pma__usergroups',
+    'navigationhiding' => 'pma__navigationhiding',
     'table_info' => 'pma__table_info',
     'column_info' => 'pma__column_info',
     'history' => 'pma__history',
@@ -106,7 +108,9 @@ $forms['Features']['Security'] = array(
     'LoginCookieRecall',
     'LoginCookieValidity',
     'LoginCookieStore',
-    'LoginCookieDeleteAll');
+    'LoginCookieDeleteAll',
+    'CaptchaLoginPublicKey',
+    'CaptchaLoginPrivateKey');
 $forms['Features']['Page_titles'] = array(
     'TitleDefault',
     'TitleTable',
@@ -120,10 +124,8 @@ $forms['Features']['Warnings'] = array(
 $forms['Features']['Developer'] = array(
     'UserprefsDeveloperTab',
     'Error_Handler/display',
-    'Error_Handler/gather',
     'DBG/sql');
 $forms['Features']['Other_core_settings'] = array(
-    'VersionCheck',
     'NaturalOrder',
     'InitialSlidersState',
     'MaxDbList',
@@ -136,7 +138,14 @@ $forms['Features']['Other_core_settings'] = array(
     'MemoryLimit',
     'SkipLockedTables',
     'DisableMultiTableMaintenance',
-    'UseDbSearch');
+    'UseDbSearch',
+    'VersionCheck',
+    'SendErrorReports',
+    'ProxyUrl',
+    'ProxyUser',
+    'ProxyPass',
+    'AllowThirdPartyFraming',
+);
 $forms['Sql_queries']['Sql_queries'] = array(
     'ShowSQL',
     'Confirm',
@@ -177,7 +186,7 @@ $forms['Navi_panel']['Navi_tables'] = array(
     'NavigationTreeDefaultTabTable',
     'NavigationTreeTableSeparator',
     'NavigationTreeTableLevel',
-    'ShowTooltip');
+);
 $forms['Main_panel']['Startup'] = array(
     'ShowCreateDb',
     'ShowStats',
@@ -191,7 +200,7 @@ $forms['Main_panel']['DbStructure'] = array(
 $forms['Main_panel']['TableStructure'] = array(
     'HideStructureActions');
 $forms['Main_panel']['Browse'] = array(
-    'NavigationBarIconic',
+    'TableNavigationLinksMode',
     'ShowAll',
     'MaxRows',
     'Order',
@@ -221,7 +230,8 @@ $forms['Main_panel']['Edit'] = array(
     'ForeignKeyDropdownOrder',
     'ForeignKeyMaxLimit');
 $forms['Main_panel']['Tabs'] = array(
-    'PropertiesIconic',
+    'TabsMode',
+    'ActionLinksMode',
     'DefaultTabServer',
     'DefaultTabDatabase',
     'DefaultTabTable',
@@ -283,6 +293,7 @@ $forms['Export']['Sql'] = array('Export' => array(
         ':group:end',
     'sql_use_transaction',
     'sql_disable_fk',
+    'sql_views_as_tables',
     'sql_compatibility',
     ':group:' . __('Database export options'),
         'sql_drop_database',

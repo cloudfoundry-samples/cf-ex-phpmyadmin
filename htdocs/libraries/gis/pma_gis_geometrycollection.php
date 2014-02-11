@@ -32,7 +32,7 @@ class PMA_GIS_Geometrycollection extends PMA_GIS_Geometry
     /**
      * Returns the singleton.
      *
-     * @return the singleton
+     * @return PMA_GIS_Geometrycollection the singleton
      * @access public
      */
     public static function singleton()
@@ -59,7 +59,7 @@ class PMA_GIS_Geometrycollection extends PMA_GIS_Geometry
 
         // Trim to remove leading 'GEOMETRYCOLLECTION(' and trailing ')'
         $goem_col = substr($spatial, 19, (strlen($spatial) - 20));
-                    
+
         // Split the geometry collection object to get its constituents.
         $sub_parts = $this->_explodeGeomCol($goem_col);
 
@@ -106,7 +106,7 @@ class PMA_GIS_Geometrycollection extends PMA_GIS_Geometry
      * @param array  $scale_data array containing data related to scaling
      * @param object $image      image object
      *
-     * @return object the modified image object
+     * @return resource the modified image object
      * @access public
      */
     public function prepareRowAsPng($spatial, $label, $color, $scale_data, $image)
@@ -138,9 +138,9 @@ class PMA_GIS_Geometrycollection extends PMA_GIS_Geometry
      * @param string $label      label for the GIS GEOMETRYCOLLECTION object
      * @param string $color      color for the GIS GEOMETRYCOLLECTION object
      * @param array  $scale_data array containing data related to scaling
-     * @param object $pdf        TCPDF instance
+     * @param TCPDF  $pdf        TCPDF instance
      *
-     * @return object the modified TCPDF instance
+     * @return TCPDF the modified TCPDF instance
      * @access pubilc
      */
     public function prepareRowAsPdf($spatial, $label, $color, $scale_data, $pdf)

@@ -4,6 +4,13 @@
  * @package PhpMyAdmin-Designer
  */
 /**
+ * block attempts to directly run this script
+ */
+if (getcwd() == dirname(__FILE__)) {
+    die('Attack stopped');
+}
+
+/**
  *
  */
 if (! defined('PHPMYADMIN')) {
@@ -27,9 +34,9 @@ function get_tables_info()
     $GLOBALS['PMD']['OWNER'] = array();
     $GLOBALS['PMD']['TABLE_NAME_SMALL'] = array();
 
-    $tables = PMA_DBI_get_tables_full($GLOBALS['db']);
+    $tables = $GLOBALS['dbi']->getTablesFull($GLOBALS['db']);
     // seems to be needed later
-    PMA_DBI_select_db($GLOBALS['db']);
+    $GLOBALS['dbi']->selectDb($GLOBALS['db']);
     $i = 0;
     foreach ($tables as $one_table) {
         $GLOBALS['PMD']['TABLE_NAME'][$i]
@@ -73,22 +80,22 @@ function get_tables_info()
  */
 function get_columns_info()
 {
-    PMA_DBI_select_db($GLOBALS['db']);
+    $GLOBALS['dbi']->selectDb($GLOBALS['db']);
     $tab_column = array();
     for ($i = 0, $cnt = count($GLOBALS['PMD']["TABLE_NAME"]); $i < $cnt; $i++) {
-        $fields_rs = PMA_DBI_query(
-            PMA_DBI_get_columns_sql(
+        $fields_rs = $GLOBALS['dbi']->query(
+            $GLOBALS['dbi']->getColumnsSql(
                 $GLOBALS['db'],
                 $GLOBALS['PMD']["TABLE_NAME_SMALL"][$i],
                 null,
                 true
             ),
             null,
-            PMA_DBI_QUERY_STORE
+            PMA_DatabaseInterface::QUERY_STORE
         );
         $tbl_name_i = $GLOBALS['PMD']['TABLE_NAME'][$i];
         $j = 0;
-        while ($row = PMA_DBI_fetch_assoc($fields_rs)) {
+        while ($row = $GLOBALS['dbi']->fetchAssoc($fields_rs)) {
             $tab_column[$tbl_name_i]['COLUMN_ID'][$j]   = $j;
             $tab_column[$tbl_name_i]['COLUMN_NAME'][$j] = $row['Field'];
             $tab_column[$tbl_name_i]['TYPE'][$j]        = $row['Type'];
@@ -106,15 +113,15 @@ function get_columns_info()
  */
 function get_script_contr()
 {
-    PMA_DBI_select_db($GLOBALS['db']);
+    $GLOBALS['dbi']->selectDb($GLOBALS['db']);
     $con["C_NAME"] = array();
     $i = 0;
-    $alltab_rs = PMA_DBI_query(
+    $alltab_rs = $GLOBALS['dbi']->query(
         'SHOW TABLES FROM ' . PMA_Util::backquote($GLOBALS['db']),
         null,
-        PMA_DBI_QUERY_STORE
+        PMA_DatabaseInterface::QUERY_STORE
     );
-    while ($val = @PMA_DBI_fetch_row($alltab_rs)) {
+    while ($val = @$GLOBALS['dbi']->fetchRow($alltab_rs)) {
         $row = PMA_getForeigners($GLOBALS['db'], $val[0], '', 'internal');
         //echo "<br> internal ".$GLOBALS['db']." - ".$val[0]." - ";
         //print_r($row);
@@ -214,9 +221,6 @@ function get_all_keys($unique_only = false)
  */
 function get_script_tabs()
 {
-    $script_tabs = 'var j_tabs = new Array();' . "\n"
-        . 'var h_tabs = new Array();' . "\n" ;
-
     $retval = array(
         'j_tabs' => array(),
         'h_tabs' => array()
@@ -254,9 +258,27 @@ function get_tab_pos()
                 `h` AS `H`
            FROM " . PMA_Util::backquote($cfgRelation['db'])
         . "." . PMA_Util::backquote($cfgRelation['designer_coords']);
-    $tab_pos = PMA_DBI_fetch_result(
-        $query, 'name', null, $GLOBALS['controllink'], PMA_DBI_QUERY_STORE
+    $tab_pos = $GLOBALS['dbi']->fetchResult(
+        $query,
+        'name',
+        null,
+        $GLOBALS['controllink'],
+        PMA_DatabaseInterface::QUERY_STORE
     );
     return count($tab_pos) ? $tab_pos : null;
+}
+
+/**
+ * Prepares XML output for js/pmd/ajax.js to display a message
+ *
+ */
+function PMD_return_upd($b, $ret)
+{
+    // not sure where this was defined...
+    global $K;
+
+    header("Content-Type: text/xml; charset=utf-8");
+    header("Cache-Control: no-cache");
+    die('<root act="relation_upd" return="'.$ret.'" b="'.$b.'" K="'.$K.'"></root>');
 }
 ?>

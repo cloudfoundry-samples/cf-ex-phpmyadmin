@@ -25,11 +25,7 @@ function PMA_getDirContent($dir, $expression = '')
             $dir .= '/';
         }
         while ($file = @readdir($handle)) {
-            // for PHP < 5.2.4, is_file() gives a warning when using open_basedir
-            // and verifying '..' or '.'
-            if ('.' != $file
-                && '..' != $file
-                && is_file($dir . $file)
+            if (is_file($dir . $file)
                 && ($expression == '' || preg_match($expression, $file))
             ) {
                 $result[] = $file;
@@ -72,7 +68,7 @@ function PMA_getFileSelectOptions($dir, $extensions = '', $active = '')
 /**
  * Get currently supported decompressions.
  *
- * @return string | separated list of extensions usable in PMA_getDirContent
+ * @return string separated list of extensions usable in PMA_getDirContent
  */
 function PMA_supportedDecompressions()
 {

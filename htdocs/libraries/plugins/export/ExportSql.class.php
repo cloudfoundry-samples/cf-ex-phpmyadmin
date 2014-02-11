@@ -63,6 +63,7 @@ class ExportSql extends ExportPlugin
             include_once "$props/options/items/RadioPropertyItem.class.php";
             include_once "$props/options/items/SelectPropertyItem.class.php";
             include_once "$props/options/items/TextPropertyItem.class.php";
+            include_once "$props/options/items/NumberPropertyItem.class.php";
 
             $exportPluginProperties = new ExportPluginProperties();
             $exportPluginProperties->setText('SQL');
@@ -148,8 +149,14 @@ class ExportSql extends ExportPlugin
             );
             $generalOptions->addProperty($leaf);
 
+            // export views as tables
+            $leaf = new BoolPropertyItem();
+            $leaf->setName("views_as_tables");
+            $leaf->setText(__('Export views as tables'));
+            $generalOptions->addProperty($leaf);
+
             // compatibility maximization
-            $compats = PMA_DBI_getCompatibilities();
+            $compats = $GLOBALS['dbi']->getCompatibilities();
             if (count($compats) > 0) {
                 $values = array();
                 foreach ($compats as $val) {
@@ -219,6 +226,15 @@ class ExportSql extends ExportPlugin
                 $leaf->setName('add_statements');
                 $leaf->setText(__('Add statements:'));
                 $subgroup->setSubgroupHeader($leaf);
+
+                if ($plugin_param['export_type'] != 'table') {
+                    $leaf = new BoolPropertyItem();
+                    $leaf->setName('create_database');
+                    $create_clause = '<code>CREATE DATABASE / USE</code>';
+                    $leaf->setText(sprintf(__('Add %s statement'), $create_clause));
+                    $subgroup->addProperty($leaf);
+                }
+
                 if ($plugin_param['export_type'] == 'table') {
                     if (PMA_Table::isView($GLOBALS['db'], $GLOBALS['table'])) {
                         $drop_clause = '<code>DROP VIEW</code>';
@@ -377,7 +393,7 @@ class ExportSql extends ExportPlugin
             $dataOptions->addProperty($subgroup);
 
             // Max length of query
-            $leaf = new TextPropertyItem();
+            $leaf = new NumberPropertyItem();
             $leaf->setName("max_query_size");
             $leaf->setText(__('Maximal length of created query'));
             $dataOptions->addProperty($leaf);
@@ -444,8 +460,9 @@ class ExportSql extends ExportPlugin
         $text = '';
         $delimiter = '$$';
 
-        $procedure_names = PMA_DBI_get_procedures_or_functions($db, 'PROCEDURE');
-        $function_names = PMA_DBI_get_procedures_or_functions($db, 'FUNCTION');
+        $procedure_names = $GLOBALS['dbi']
+            ->getProceduresOrFunctions($db, 'PROCEDURE');
+        $function_names = $GLOBALS['dbi']->getProceduresOrFunctions($db, 'FUNCTION');
 
         if ($procedure_names || $function_names) {
             $text .= $crlf
@@ -464,7 +481,8 @@ class ExportSql extends ExportPlugin
                         . PMA_Util::backquote($procedure_name)
                         . $delimiter . $crlf;
                 }
-                $text .= PMA_DBI_get_definition($db, 'PROCEDURE', $procedure_name)
+                $text .= $GLOBALS['dbi']
+                    ->getDefinition($db, 'PROCEDURE', $procedure_name)
                     . $delimiter . $crlf . $crlf;
             }
         }
@@ -481,7 +499,8 @@ class ExportSql extends ExportPlugin
                         . PMA_Util::backquote($function_name)
                         . $delimiter . $crlf;
                 }
-                $text .= PMA_DBI_get_definition($db, 'FUNCTION', $function_name)
+                $text .= $GLOBALS['dbi']
+                    ->getDefinition($db, 'FUNCTION', $function_name)
                     . $delimiter . $crlf . $crlf;
             }
         }
@@ -569,7 +588,7 @@ class ExportSql extends ExportPlugin
 
         /* Restore timezone */
         if (isset($GLOBALS['sql_utc_time']) && $GLOBALS['sql_utc_time']) {
-            PMA_DBI_query('SET time_zone = "' . $GLOBALS['old_tz'] . '"');
+            $GLOBALS['dbi']->query('SET time_zone = "' . $GLOBALS['old_tz'] . '"');
         }
 
         return PMA_exportOutputHandler($foot);
@@ -591,27 +610,27 @@ class ExportSql extends ExportPlugin
             if ($tmp_compat == 'NONE') {
                 $tmp_compat = '';
             }
-            PMA_DBI_try_query('SET SQL_MODE="' . $tmp_compat . '"');
+            $GLOBALS['dbi']->tryQuery('SET SQL_MODE="' . $tmp_compat . '"');
             unset($tmp_compat);
         }
         $head  =  $this->_exportComment('phpMyAdmin SQL Dump')
                .  $this->_exportComment('version ' . PMA_VERSION)
                .  $this->_exportComment('http://www.phpmyadmin.net')
                .  $this->_exportComment();
-        $host_string = __('Host') . ': ' .  $cfg['Server']['host'];
+        $host_string = __('Host:') . ' ' .  $cfg['Server']['host'];
         if (! empty($cfg['Server']['port'])) {
             $host_string .= ':' . $cfg['Server']['port'];
         }
         $head .= $this->_exportComment($host_string);
         $head .=
             $this->_exportComment(
-                __('Generation Time') . ': '
+                __('Generation Time:') . ' '
                 .  PMA_Util::localisedDate()
             )
             .  $this->_exportComment(
-                __('Server version') . ': ' . PMA_MYSQL_STR_VERSION
+                __('Server version:') . ' ' . PMA_MYSQL_STR_VERSION
             )
-            .  $this->_exportComment(__('PHP Version') . ': ' . phpversion())
+            .  $this->_exportComment(__('PHP Version:') . ' ' . phpversion())
             .  $this->_possibleCRLF();
 
         if (isset($GLOBALS['sql_header_comment'])
@@ -648,8 +667,9 @@ class ExportSql extends ExportPlugin
         /* Change timezone if we should export timestamps in UTC */
         if (isset($GLOBALS['sql_utc_time']) && $GLOBALS['sql_utc_time']) {
             $head .= 'SET time_zone = "+00:00";' . $crlf;
-            $GLOBALS['old_tz'] = PMA_DBI_fetch_value('SELECT @@session.time_zone');
-            PMA_DBI_query('SET time_zone = "+00:00"');
+            $GLOBALS['old_tz'] = $GLOBALS['dbi']
+                ->fetchValue('SELECT @@session.time_zone');
+            $GLOBALS['dbi']->query('SET time_zone = "+00:00"');
         }
 
         $head .= $this->_possibleCRLF();
@@ -706,39 +726,42 @@ class ExportSql extends ExportPlugin
                 return false;
             }
         }
-        $create_query = 'CREATE DATABASE IF NOT EXISTS '
-            . (isset($GLOBALS['sql_backquotes'])
-            ? PMA_Util::backquoteCompat($db, $compat) : $db);
-        $collation = PMA_getDbCollation($db);
-        if (PMA_DRIZZLE) {
-            $create_query .= ' COLLATE ' . $collation;
-        } else {
-            if (strpos($collation, '_')) {
-                $create_query .= ' DEFAULT CHARACTER SET '
-                    . substr($collation, 0, strpos($collation, '_'))
-                    . ' COLLATE ' . $collation;
+        if (isset($GLOBALS['sql_create_database'])) {
+            $create_query = 'CREATE DATABASE IF NOT EXISTS '
+                . (isset($GLOBALS['sql_backquotes'])
+                ? PMA_Util::backquoteCompat($db, $compat) : $db);
+            $collation = PMA_getDbCollation($db);
+            if (PMA_DRIZZLE) {
+                $create_query .= ' COLLATE ' . $collation;
             } else {
-                $create_query .= ' DEFAULT CHARACTER SET ' . $collation;
+                if (strpos($collation, '_')) {
+                    $create_query .= ' DEFAULT CHARACTER SET '
+                        . substr($collation, 0, strpos($collation, '_'))
+                        . ' COLLATE ' . $collation;
+                } else {
+                    $create_query .= ' DEFAULT CHARACTER SET ' . $collation;
+                }
             }
-        }
-        $create_query .= ';' . $crlf;
-        if (! PMA_exportOutputHandler($create_query)) {
-            return false;
-        }
-        if (isset($GLOBALS['sql_backquotes'])
-            && ((isset($GLOBALS['sql_compatibility'])
-            && $GLOBALS['sql_compatibility'] == 'NONE')
-            || PMA_DRIZZLE)
-        ) {
-            $result = PMA_exportOutputHandler(
-                'USE ' . PMA_Util::backquoteCompat($db, $compat)
-                . ';' . $crlf
-            );
+            $create_query .= ';' . $crlf;
+            if (! PMA_exportOutputHandler($create_query)) {
+                return false;
+            }
+            if (isset($GLOBALS['sql_backquotes'])
+                && ((isset($GLOBALS['sql_compatibility'])
+                && $GLOBALS['sql_compatibility'] == 'NONE')
+                || PMA_DRIZZLE)
+            ) {
+                $result = PMA_exportOutputHandler(
+                    'USE ' . PMA_Util::backquoteCompat($db, $compat)
+                    . ';' . $crlf
+                );
+            } else {
+                $result = PMA_exportOutputHandler('USE ' . $db . ';' . $crlf);
+            }
+            return $result;
         } else {
-            $result = PMA_exportOutputHandler('USE ' . $db . ';' . $crlf);
+            return true;
         }
-
-        return $result;
     }
 
     /**
@@ -757,7 +780,7 @@ class ExportSql extends ExportPlugin
         }
         $head = $this->_exportComment()
             . $this->_exportComment(
-                __('Database') . ': '
+                __('Database:') . ' '
                 . (isset($GLOBALS['sql_backquotes'])
                 ? PMA_Util::backquoteCompat($db, $compat)
                 : '\'' . $db . '\'')
@@ -791,7 +814,7 @@ class ExportSql extends ExportPlugin
             $delimiter = '$$';
 
             if (PMA_MYSQL_INT_VERSION > 50100) {
-                $event_names = PMA_DBI_fetch_result(
+                $event_names = $GLOBALS['dbi']->fetchResult(
                     'SELECT EVENT_NAME FROM information_schema.EVENTS WHERE'
                     . ' EVENT_SCHEMA= \''
                     . PMA_Util::sqlAddSlashes($db, true)
@@ -816,7 +839,8 @@ class ExportSql extends ExportPlugin
                             . PMA_Util::backquote($event_name)
                             . $delimiter . $crlf;
                     }
-                    $text .= PMA_DBI_get_definition($db, 'EVENT', $event_name)
+                    $text .= $GLOBALS['dbi']
+                        ->getDefinition($db, 'EVENT', $event_name)
                         . $delimiter . $crlf . $crlf;
                 }
 
@@ -857,13 +881,82 @@ class ExportSql extends ExportPlugin
         }
         $create_query .= PMA_Util::backquote($view) . ' (' . $crlf;
         $tmp = array();
-        $columns = PMA_DBI_get_columns_full($db, $view);
+        $columns = $GLOBALS['dbi']->getColumnsFull($db, $view);
         foreach ($columns as $column_name => $definition) {
             $tmp[] = PMA_Util::backquote($column_name) . ' ' .
                 $definition['Type'] . $crlf;
         }
         $create_query .= implode(',', $tmp) . ');';
         return($create_query);
+    }
+
+    /**
+     * Returns CREATE definition that matches $view's structure
+     *
+     * @param string $db            the database name
+     * @param string $view          the view name
+     * @param string $crlf          the end of line sequence
+     * @param bool   $add_semicolon whether to add semicolon and end-of-line at
+     *                              the end
+     *
+     * @return string resulting schema
+     */
+    private function _getTableDefForView(
+        $db,
+        $view,
+        $crlf,
+        $add_semicolon = true
+    ) {
+        $create_query = "CREATE TABLE";
+        if (isset($GLOBALS['sql_if_not_exists'])) {
+            $create_query .= " IF NOT EXISTS ";
+        }
+        $create_query .= PMA_Util::backquote($view) . "(" . $crlf;
+
+        $columns = $GLOBALS['dbi']->getColumns($db, $view, null, true);
+
+        $firstCol = true;
+        foreach ($columns as $column) {
+            $extracted_columnspec = PMA_Util::extractColumnSpec($column['Type']);
+
+            if (! $firstCol) {
+                $create_query .= "," . $crlf;
+            }
+            $create_query .= "    " . PMA_Util::backquote($column['Field']);
+            $create_query .= " " . $column['Type'];
+            if ($extracted_columnspec['can_contain_collation']
+                && ! empty($column['Collation'])
+            ) {
+                $create_query .= " COLLATE " . $column['Collation'];
+            }
+            if ($column['Null'] == 'NO') {
+                $create_query .= " NOT NULL";
+            }
+            if (isset($column['Default'])) {
+                 $create_query .= " DEFAULT '"
+                     . PMA_Util::sqlAddSlashes($column['Default']) . "'";
+            } else if ($column['Null'] == 'YES') {
+                 $create_query .= " DEFAULT NULL";
+            }
+            if (! empty($column['Comment'])) {
+                $create_query .= " COMMENT '"
+                    . PMA_Util::sqlAddSlashes($column['Comment']) . "'";
+            }
+            $firstCol = false;
+        }
+        $create_query .= $crlf . ")" . ($add_semicolon ? ';' : '') . $crlf;
+
+        if (isset($GLOBALS['sql_compatibility'])) {
+            $compat = $GLOBALS['sql_compatibility'];
+        } else {
+            $compat = 'NONE';
+        }
+        if ($compat == 'MSSQL') {
+            $create_query = $this->_makeCreateTableMSSQLCompatible(
+                $create_query
+            );
+        }
+        return $create_query;
     }
 
     /**
@@ -903,16 +996,17 @@ class ExportSql extends ExportPlugin
             $compat = 'NONE';
         }
 
-        // need to use PMA_DBI_QUERY_STORE with PMA_DBI_num_rows() in mysqli
-        $result = PMA_DBI_query(
+        // need to use PMA_DatabaseInterface::QUERY_STORE
+        // with $GLOBALS['dbi']->numRows() in mysqli
+        $result = $GLOBALS['dbi']->query(
             'SHOW TABLE STATUS FROM ' . PMA_Util::backquote($db)
             . ' LIKE \'' . PMA_Util::sqlAddSlashes($table, true) . '\'',
             null,
-            PMA_DBI_QUERY_STORE
+            PMA_DatabaseInterface::QUERY_STORE
         );
         if ($result != false) {
-            if (PMA_DBI_num_rows($result) > 0) {
-                $tmpres = PMA_DBI_fetch_assoc($result);
+            if ($GLOBALS['dbi']->numRows($result) > 0) {
+                $tmpres = $GLOBALS['dbi']->fetchAssoc($result);
                 if (PMA_DRIZZLE && $show_dates) {
                     // Drizzle doesn't give Create_time and Update_time in
                     // SHOW TABLE STATUS, add it
@@ -924,7 +1018,9 @@ class ExportSql extends ExportPlugin
                         . PMA_Util::sqlAddSlashes($db) . "'
                           AND TABLE_NAME = '"
                         . PMA_Util::sqlAddSlashes($table) . "'";
-                    $tmpres = array_merge(PMA_DBI_fetch_single_row($sql), $tmpres);
+                    $tmpres = array_merge(
+                        $GLOBALS['dbi']->fetchSingleRow($sql), $tmpres
+                    );
                 }
                 // Here we optionally add the AUTO_INCREMENT next value,
                 // but starting with MySQL 5.0.24, the clause is already included
@@ -943,7 +1039,7 @@ class ExportSql extends ExportPlugin
                     && ! empty($tmpres['Create_time'])
                 ) {
                     $schema_create .= $this->_exportComment(
-                        __('Creation') . ': '
+                        __('Creation:') . ' '
                         . PMA_Util::localisedDate(
                             strtotime($tmpres['Create_time'])
                         )
@@ -956,7 +1052,7 @@ class ExportSql extends ExportPlugin
                     && ! empty($tmpres['Update_time'])
                 ) {
                     $schema_create .= $this->_exportComment(
-                        __('Last update') . ': '
+                        __('Last update:') . ' '
                         . PMA_Util::localisedDate(
                             strtotime($tmpres['Update_time'])
                         )
@@ -969,7 +1065,7 @@ class ExportSql extends ExportPlugin
                     && ! empty($tmpres['Check_time'])
                 ) {
                     $schema_create .= $this->_exportComment(
-                        __('Last check') . ': '
+                        __('Last check:') . ' '
                         . PMA_Util::localisedDate(
                             strtotime($tmpres['Check_time'])
                         )
@@ -977,7 +1073,7 @@ class ExportSql extends ExportPlugin
                     $new_crlf = $this->_exportComment() . $crlf;
                 }
             }
-            PMA_DBI_free_result($result);
+            $GLOBALS['dbi']->freeResult($result);
         }
 
         $schema_create .= $new_crlf;
@@ -994,9 +1090,9 @@ class ExportSql extends ExportPlugin
         // Drizzle always quotes names
         if (! PMA_DRIZZLE) {
             if ($sql_backquotes) {
-                PMA_DBI_query('SET SQL_QUOTE_SHOW_CREATE = 1');
+                $GLOBALS['dbi']->query('SET SQL_QUOTE_SHOW_CREATE = 1');
             } else {
-                PMA_DBI_query('SET SQL_QUOTE_SHOW_CREATE = 0');
+                $GLOBALS['dbi']->query('SET SQL_QUOTE_SHOW_CREATE = 0');
             }
         }
 
@@ -1004,23 +1100,23 @@ class ExportSql extends ExportPlugin
         // because SHOW CREATE TABLE returns only one row, and we free the
         // results below. Nonetheless, we got 2 user reports about this
         // (see bug 1562533) so I removed the unbuffered mode.
-        // $result = PMA_DBI_query('SHOW CREATE TABLE ' . backquote($db)
-        // . '.' . backquote($table), null, PMA_DBI_QUERY_UNBUFFERED);
+        // $result = $GLOBALS['dbi']->query('SHOW CREATE TABLE ' . backquote($db)
+        // . '.' . backquote($table), null, PMA_DatabaseInterface::QUERY_UNBUFFERED);
         //
         // Note: SHOW CREATE TABLE, at least in MySQL 5.1.23, does not
         // produce a displayable result for the default value of a BIT
         // column, nor does the mysqldump command. See MySQL bug 35796
-        $result = PMA_DBI_try_query(
+        $result = $GLOBALS['dbi']->tryQuery(
             'SHOW CREATE TABLE ' . PMA_Util::backquote($db) . '.'
             . PMA_Util::backquote($table)
         );
         // an error can happen, for example the table is crashed
-        $tmp_error = PMA_DBI_getError();
+        $tmp_error = $GLOBALS['dbi']->getError();
         if ($tmp_error) {
             return $this->_exportComment(__('in use') . '(' . $tmp_error . ')');
         }
 
-        if ($result != false && ($row = PMA_DBI_fetch_row($result))) {
+        if ($result != false && ($row = $GLOBALS['dbi']->fetchRow($result))) {
             $create_query = $row[1];
             unset($row);
 
@@ -1050,8 +1146,7 @@ class ExportSql extends ExportPlugin
             }
 
             // Should we use IF NOT EXISTS?
-            // It always must be OFF for MSSQL compatibility mode
-            if (isset($GLOBALS['sql_if_not_exists']) && $compat != 'MSSQL') {
+            if (isset($GLOBALS['sql_if_not_exists'])) {
                 $create_query = preg_replace(
                     '/^CREATE TABLE/',
                     'CREATE TABLE IF NOT EXISTS',
@@ -1059,93 +1154,10 @@ class ExportSql extends ExportPlugin
                 );
             }
 
-            // In MSSQL
-            // 1. DATE field doesn't exists, we will use DATETIME instead
-            // 2. UNSIGNED attribute doesn't exist
-            // 3. No length on INT, TINYINT, SMALLINT, BIGINT and no precision on
-            //    FLOAT fields
-            // 4. No KEY and INDEX inside CREATE TABLE
-            // 5. DOUBLE field doesn't exists, we will use FLOAT instead
             if ($compat == 'MSSQL') {
-                // first we need  to replace all lines ended with '" DATE ...,\n'
-                // last preg_replace preserve us from situation with date text
-                // inside DEFAULT field value
-                $create_query = preg_replace(
-                    "/\" date DEFAULT NULL(,)?\n/",
-                    '" datetime DEFAULT NULL$1' . "\n",
+                $create_query = $this->_makeCreateTableMSSQLCompatible(
                     $create_query
                 );
-                $create_query = preg_replace(
-                    "/\" date NOT NULL(,)?\n/",
-                    '" datetime NOT NULL$1' . "\n",
-                    $create_query
-                );
-                $create_query = preg_replace(
-                    '/" date NOT NULL DEFAULT \'([^\'])/',
-                    '" datetime NOT NULL DEFAULT \'$1',
-                    $create_query
-                );
-
-                // next we need to replace all lines ended with ') UNSIGNED ...,'
-                // last preg_replace preserve us from situation with unsigned text
-                // inside DEFAULT field value
-                $create_query = preg_replace(
-                    "/\) unsigned NOT NULL(,)?\n/",
-                    ') NOT NULL$1' . "\n",
-                    $create_query
-                );
-                $create_query = preg_replace(
-                    "/\) unsigned DEFAULT NULL(,)?\n/",
-                    ') DEFAULT NULL$1' . "\n",
-                    $create_query
-                );
-                $create_query = preg_replace(
-                    '/\) unsigned NOT NULL DEFAULT \'([^\'])/',
-                    ') NOT NULL DEFAULT \'$1',
-                    $create_query
-                );
-
-                // we need to replace all lines ended with
-                // '" INT|TINYINT([0-9]{1,}) ...,' last preg_replace preserve us
-                // from situation with int([0-9]{1,}) text inside DEFAULT field
-                // value
-                $create_query = preg_replace(
-                    '/" (int|tinyint|smallint|bigint)\([0-9]+\) DEFAULT NULL(,)?\n/',
-                    '" $1 DEFAULT NULL$2' . "\n",
-                    $create_query
-                );
-                $create_query = preg_replace(
-                    '/" (int|tinyint|smallint|bigint)\([0-9]+\) NOT NULL(,)?\n/',
-                    '" $1 NOT NULL$2' . "\n",
-                    $create_query
-                );
-                $create_query = preg_replace(
-                    '/" (int|tinyint|smallint|bigint)\([0-9]+\) NOT NULL DEFAULT \'([^\'])/',
-                    '" $1 NOT NULL DEFAULT \'$2',
-                    $create_query
-                );
-
-                // we need to replace all lines ended with
-                // '" FLOAT|DOUBLE([0-9,]{1,}) ...,'
-                // last preg_replace preserve us from situation with
-                // float([0-9,]{1,}) text inside DEFAULT field value
-                $create_query = preg_replace(
-                    '/" (float|double)(\([0-9]+,[0-9,]+\))? DEFAULT NULL(,)?\n/',
-                    '" float DEFAULT NULL$3' . "\n",
-                    $create_query
-                );
-                $create_query = preg_replace(
-                    '/" (float|double)(\([0-9,]+,[0-9,]+\))? NOT NULL(,)?\n/',
-                    '" float NOT NULL$3' . "\n",
-                    $create_query
-                );
-                $create_query = preg_replace(
-                    '/" (float|double)(\([0-9,]+,[0-9,]+\))? NOT NULL DEFAULT \'([^\'])/',
-                    '" float NOT NULL DEFAULT \'$3',
-                    $create_query
-                );
-
-                // @todo remove indexes from CREATE TABLE
             }
 
             // Drizzle (checked on 2011.03.13) returns ROW_FORMAT surrounded
@@ -1295,7 +1307,7 @@ class ExportSql extends ExportPlugin
 
         $schema_create .= ($compat != 'MSSQL') ? $auto_increment : '';
 
-        PMA_DBI_free_result($result);
+        $GLOBALS['dbi']->freeResult($result);
         return $schema_create . ($add_semicolon ? ';' . $crlf : '');
     } // end of the 'getTableDef()' function
 
@@ -1350,7 +1362,7 @@ class ExportSql extends ExportPlugin
                 . PMA_Util::backquote($table, $sql_backquotes) . ':'
             );
             @reset($mime_map);
-            foreach ($mime_map AS $mime_field => $mime) {
+            foreach ($mime_map as $mime_field => $mime) {
                 $schema_create .=
                     $this->_exportComment(
                         '  '
@@ -1375,7 +1387,7 @@ class ExportSql extends ExportPlugin
                     . PMA_Util::backquote($table, $sql_backquotes)
                     . ':'
                 );
-            foreach ($res_rel AS $rel_field => $rel) {
+            foreach ($res_rel as $rel_field => $rel) {
                 $schema_create .=
                     $this->_exportComment(
                         '  '
@@ -1460,7 +1472,7 @@ class ExportSql extends ExportPlugin
             break;
         case 'triggers':
             $dump = '';
-            $triggers = PMA_DBI_get_triggers($db, $table);
+            $triggers = $GLOBALS['dbi']->getTriggers($db, $table);
             if ($triggers) {
                 $dump .=  $this->_possibleCRLF()
                     . $this->_exportComment()
@@ -1478,21 +1490,40 @@ class ExportSql extends ExportPlugin
             }
             break;
         case 'create_view':
-            $dump .=
+            if (empty($GLOBALS['sql_views_as_tables'])) {
+                $dump .=
+                    $this->_exportComment(
+                        __('Structure for view')
+                        . ' '
+                        . $formatted_table_name
+                    )
+                    . $this->_exportComment();
+                // delete the stand-in table previously created (if any)
+                if ($export_type != 'table') {
+                    $dump .= 'DROP TABLE IF EXISTS '
+                        . PMA_Util::backquote($table) . ';' . $crlf;
+                }
+                $dump .= $this->getTableDef(
+                    $db, $table, $crlf, $error_url, $dates, true, true
+                );
+            } else {
+                $dump .=
                 $this->_exportComment(
-                    __('Structure for view')
-                    . ' '
-                    . $formatted_table_name
+                    sprintf(
+                        __('Structure for view %s exported as a table'),
+                        $formatted_table_name
+                    )
                 )
                 . $this->_exportComment();
-            // delete the stand-in table previously created (if any)
-            if ($export_type != 'table') {
-                $dump .= 'DROP TABLE IF EXISTS '
-                    . PMA_Util::backquote($table) . ';' . $crlf;
+                // delete the stand-in table previously created (if any)
+                if ($export_type != 'table') {
+                    $dump .= 'DROP TABLE IF EXISTS '
+                        . PMA_Util::backquote($table) . ';' . $crlf;
+                }
+                $dump .= $this->_getTableDefForView(
+                    $db, $table, $crlf, true
+                );
             }
-            $dump .= $this->getTableDef(
-                $db, $table, $crlf, $error_url, $dates, true, true
-            );
             break;
         case 'stand_in':
             $dump .=
@@ -1536,13 +1567,15 @@ class ExportSql extends ExportPlugin
             ? PMA_Util::backquoteCompat($table, $compat)
             : '\'' . $table . '\'';
 
-        // Do not export data for a VIEW
+        // Do not export data for a VIEW, unless asked to export the view as a table
         // (For a VIEW, this is called only when exporting a single VIEW)
-        if (PMA_Table::isView($db, $table)) {
+        if (PMA_Table::isView($db, $table)
+            && empty($GLOBALS['sql_views_as_tables'])
+        ) {
             $head = $this->_possibleCRLF()
               . $this->_exportComment()
               . $this->_exportComment('VIEW ' . ' ' . $formatted_table_name)
-              . $this->_exportComment(__('Data') . ': ' . __('None'))
+              . $this->_exportComment(__('Data:') . ' ' . __('None'))
               . $this->_exportComment()
               . $this->_possibleCRLF();
 
@@ -1557,9 +1590,11 @@ class ExportSql extends ExportPlugin
         //  are used, we did not get the true column name in case of aliases)
         $analyzed_sql = PMA_SQP_analyze(PMA_SQP_parse($sql_query));
 
-        $result = PMA_DBI_try_query($sql_query, null, PMA_DBI_QUERY_UNBUFFERED);
+        $result = $GLOBALS['dbi']->tryQuery(
+            $sql_query, null, PMA_DatabaseInterface::QUERY_UNBUFFERED
+        );
         // a possible error: the table has crashed
-        $tmp_error = PMA_DBI_getError();
+        $tmp_error = $GLOBALS['dbi']->getError();
         if ($tmp_error) {
             return PMA_exportOutputHandler(
                 $this->_exportComment(
@@ -1569,13 +1604,13 @@ class ExportSql extends ExportPlugin
         }
 
         if ($result != false) {
-            $fields_cnt = PMA_DBI_num_fields($result);
+            $fields_cnt = $GLOBALS['dbi']->numFields($result);
 
             // Get field information
-            $fields_meta = PMA_DBI_get_fields_meta($result);
+            $fields_meta = $GLOBALS['dbi']->getFieldsMeta($result);
             $field_flags = array();
             for ($j = 0; $j < $fields_cnt; $j++) {
-                $field_flags[$j] = PMA_DBI_field_flags($result, $j);
+                $field_flags[$j] = $GLOBALS['dbi']->fieldFlags($result, $j);
             }
 
             for ($j = 0; $j < $fields_cnt; $j++) {
@@ -1697,7 +1732,7 @@ class ExportSql extends ExportPlugin
                 $separator      = ';';
             }
 
-            while ($row = PMA_DBI_fetch_row($result)) {
+            while ($row = $GLOBALS['dbi']->fetchRow($result)) {
                 if ($current_row == 0) {
                     $head = $this->_possibleCRLF()
                         . $this->_exportComment()
@@ -1869,8 +1904,114 @@ class ExportSql extends ExportPlugin
                 }
             }
         } // end if ($result != false)
-        PMA_DBI_free_result($result);
+        $GLOBALS['dbi']->freeResult($result);
 
         return true;
     } // end of the 'exportData()' function
+
+    /**
+     * Make a create table statement compatible with MSSQL
+     *
+     * @param string $create_query MySQL create table statement
+     *
+     * @return string MSSQL compatible create table statement
+     */
+    private function _makeCreateTableMSSQLCompatible($create_query)
+    {
+        // In MSSQL
+        // 1. No 'IF NOT EXISTS' in CREATE TABLE
+        // 2. DATE field doesn't exists, we will use DATETIME instead
+        // 3. UNSIGNED attribute doesn't exist
+        // 4. No length on INT, TINYINT, SMALLINT, BIGINT and no precision on
+        //    FLOAT fields
+        // 5. No KEY and INDEX inside CREATE TABLE
+        // 6. DOUBLE field doesn't exists, we will use FLOAT instead
+
+        $create_query = preg_replace(
+            "/^CREATE TABLE IF NOT EXISTS/",
+            'CREATE TABLE',
+            $create_query
+        );
+        // first we need  to replace all lines ended with '" DATE ...,\n'
+        // last preg_replace preserve us from situation with date text
+        // inside DEFAULT field value
+        $create_query = preg_replace(
+            "/\" date DEFAULT NULL(,)?\n/",
+            '" datetime DEFAULT NULL$1' . "\n",
+            $create_query
+        );
+        $create_query = preg_replace(
+            "/\" date NOT NULL(,)?\n/",
+            '" datetime NOT NULL$1' . "\n",
+            $create_query
+        );
+        $create_query = preg_replace(
+            '/" date NOT NULL DEFAULT \'([^\'])/',
+            '" datetime NOT NULL DEFAULT \'$1',
+            $create_query
+        );
+
+        // next we need to replace all lines ended with ') UNSIGNED ...,'
+        // last preg_replace preserve us from situation with unsigned text
+        // inside DEFAULT field value
+        $create_query = preg_replace(
+            "/\) unsigned NOT NULL(,)?\n/",
+            ') NOT NULL$1' . "\n",
+            $create_query
+        );
+        $create_query = preg_replace(
+            "/\) unsigned DEFAULT NULL(,)?\n/",
+            ') DEFAULT NULL$1' . "\n",
+            $create_query
+        );
+        $create_query = preg_replace(
+            '/\) unsigned NOT NULL DEFAULT \'([^\'])/',
+            ') NOT NULL DEFAULT \'$1',
+            $create_query
+        );
+
+        // we need to replace all lines ended with
+        // '" INT|TINYINT([0-9]{1,}) ...,' last preg_replace preserve us
+        // from situation with int([0-9]{1,}) text inside DEFAULT field
+        // value
+        $create_query = preg_replace(
+            '/" (int|tinyint|smallint|bigint)\([0-9]+\) DEFAULT NULL(,)?\n/',
+            '" $1 DEFAULT NULL$2' . "\n",
+            $create_query
+        );
+        $create_query = preg_replace(
+            '/" (int|tinyint|smallint|bigint)\([0-9]+\) NOT NULL(,)?\n/',
+            '" $1 NOT NULL$2' . "\n",
+            $create_query
+        );
+        $create_query = preg_replace(
+            '/" (int|tinyint|smallint|bigint)\([0-9]+\) NOT NULL DEFAULT \'([^\'])/',
+            '" $1 NOT NULL DEFAULT \'$2',
+            $create_query
+        );
+
+        // we need to replace all lines ended with
+        // '" FLOAT|DOUBLE([0-9,]{1,}) ...,'
+        // last preg_replace preserve us from situation with
+        // float([0-9,]{1,}) text inside DEFAULT field value
+        $create_query = preg_replace(
+            '/" (float|double)(\([0-9]+,[0-9,]+\))? DEFAULT NULL(,)?\n/',
+            '" float DEFAULT NULL$3' . "\n",
+            $create_query
+        );
+        $create_query = preg_replace(
+            '/" (float|double)(\([0-9,]+,[0-9,]+\))? NOT NULL(,)?\n/',
+            '" float NOT NULL$3' . "\n",
+            $create_query
+        );
+        $create_query = preg_replace(
+            '/" (float|double)(\([0-9,]+,[0-9,]+\))? NOT NULL DEFAULT \'([^\'])/',
+            '" float NOT NULL DEFAULT \'$3',
+            $create_query
+        );
+
+        // @todo remove indexes from CREATE TABLE
+
+        return $create_query;
+    }
 }

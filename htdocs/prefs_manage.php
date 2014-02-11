@@ -18,7 +18,8 @@ require_once 'libraries/config/Form.class.php';
 require_once 'libraries/config/FormDisplay.class.php';
 require 'libraries/config/user_preferences.forms.php';
 
-PMA_userprefsPageInit();
+$cf = new ConfigFile($GLOBALS['PMA_Config']->base_settings);
+PMA_userprefsPageInit($cf);
 
 $error = '';
 if (isset($_POST['submit_export'])
@@ -82,13 +83,12 @@ if (isset($_POST['submit_export'])
     } else {
         // sanitize input values: treat them as though
         // they came from HTTP POST request
-        $form_display = new FormDisplay();
+        $form_display = new FormDisplay($cf);
         foreach ($forms as $formset_id => $formset) {
             foreach ($formset as $form_name => $form) {
                 $form_display->registerForm($formset_id . ': ' . $form_name, $form);
             }
         }
-        $cf = ConfigFile::getInstance();
         $new_config = $cf->getFlatDefaultConfig();
         if (!empty($_POST['import_merge'])) {
             $new_config = array_merge($new_config, $cf->getConfigArray());
@@ -110,27 +110,33 @@ if (isset($_POST['submit_export'])
         if (!$all_ok) {
             // mimic original form and post json in a hidden field
             include 'libraries/user_preferences.inc.php';
-            $msg = PMA_Message::error(__('Configuration contains incorrect data for some fields.'));
+            $msg = PMA_Message::error(
+                __('Configuration contains incorrect data for some fields.')
+            );
             $msg->display();
             echo '<div class="config-form">';
             $form_display->displayErrors();
             echo '</div>';
-            ?>
-            <form action="prefs_manage.php" method="post">
-                <?php echo PMA_generate_common_hidden_inputs() . "\n"; ?>
-                <input type="hidden" name="json" value="<?php echo htmlspecialchars($json) ?>" />
-                <input type="hidden" name="fix_errors" value="1" />
-                <?php if (! empty($_POST['import_merge'])) { ?>
-                <input type="hidden" name="import_merge" value="1" />
-                <?php } ?>
-                <?php if ($return_url) { ?>
-                <input type="hidden" name="return_url" value="<?php echo htmlspecialchars($return_url) ?>" />
-                <?php } ?>
-                <p><?php echo __('Do you want to import remaining settings?') ?></p>
-                <input type="submit" name="submit_import" value="<?php echo __('Yes') ?>" />
-                <input type="submit" name="submit_ignore" value="<?php echo __('No') ?>" />
-            </form>
-            <?php
+            echo '<form action="prefs_manage.php" method="post">';
+            echo PMA_URL_getHiddenInputs() . "\n";
+            echo '<input type="hidden" name="json" value="'
+                . htmlspecialchars($json) . '" />';
+            echo '<input type="hidden" name="fix_errors" value="1" />';
+            if (! empty($_POST['import_merge'])) {
+                echo '<input type="hidden" name="import_merge" value="1" />';
+            }
+            if ($return_url) {
+                echo '<input type="hidden" name="return_url" value="'
+                    . htmlspecialchars($return_url) . '" />';
+            }
+            echo '<p>';
+            echo __('Do you want to import remaining settings?');
+            echo '</p>';
+            echo '<input type="submit" name="submit_import" value="'
+                . __('Yes') . '" />';
+            echo '<input type="submit" name="submit_ignore" value="'
+                . __('No') . '" />';
+            echo '</form>';
             exit;
         }
 
@@ -232,8 +238,8 @@ PMA_printJsValue("PMA_messages['strSavedOn']", __('Saved on: @DATE@'));
             <h2><?php echo __('Import') ?></h2>
             <form class="group-cnt prefs-form disableAjax" name="prefs_import" action="prefs_manage.php" method="post" enctype="multipart/form-data">
                 <?php
-                echo PMA_Util::generateHiddenMaxFileSize($max_upload_size) . "\n";
-                echo PMA_generate_common_hidden_inputs() . "\n";
+                echo PMA_Util::generateHiddenMaxFileSize($GLOBALS['max_upload_size']) . "\n";
+                echo PMA_URL_getHiddenInputs() . "\n";
                 ?>
                 <input type="hidden" name="json" value="" />
                 <input type="radio" id="import_text_file" name="import_type" value="text_file" checked="checked" />
@@ -293,7 +299,7 @@ PMA_printJsValue("PMA_messages['strSavedOn']", __('Saved on: @DATE@'));
                 ?>
             </div>
             <form class="group-cnt prefs-form disableAjax" name="prefs_export" action="prefs_manage.php" method="post">
-            <?php echo PMA_generate_common_hidden_inputs() . "\n" ?>
+            <?php echo PMA_URL_getHiddenInputs() . "\n" ?>
                 <div style="padding-bottom:0.5em">
                     <input type="radio" id="export_text_file" name="export_type" value="text_file" checked="checked" />
                     <label for="export_text_file"><?php echo __('Save as file') ?></label>
@@ -317,14 +323,17 @@ PMA_printJsValue("PMA_messages['strSavedOn']", __('Saved on: @DATE@'));
             </form>
         </div>
         <div class="group">
-            <h2><?php echo __('Reset') ?></h2>
-            <form class="group-cnt prefs-form disableAjax" name="prefs_reset" action="prefs_manage.php" method="post">
-            <?php echo PMA_generate_common_hidden_inputs() . "\n" ?>
-                <?php echo __('You can reset all your settings and restore them to default values.') ?>
-                <br /><br />
-                <input type="submit" name="submit_clear" value="<?php echo __('Reset') ?>" />
-            </form>
-
+<?php
+echo '<h2>' . __('Reset') . '</h2>'
+    . '<form class="group-cnt prefs-form disableAjax" name="prefs_reset"'
+    . ' action="prefs_manage.php" method="post">'
+    . PMA_URL_getHiddenInputs()
+    . __('You can reset all your settings and restore them to default values.')
+    . '<br /><br />'
+    . '<input type="submit" name="submit_clear" value="'
+    . __('Reset') . '" />'
+    . '</form>';
+?>
         </div>
     </div>
     <br class="clearfloat" />

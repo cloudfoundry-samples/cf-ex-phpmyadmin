@@ -55,7 +55,7 @@ function PMA_ifSetOr(&$var, $default = null, $type = 'similar')
  * $type can be:
  * - false       : no type checking
  * - 'scalar'    : whether type of $var is integer, float, string or boolean
- * - 'numeric'   : whether type of $var is any number repesentation
+ * - 'numeric'   : whether type of $var is any number representation
  * - 'length'    : whether type of $var is scalar with a string length > 0
  * - 'similar'   : whether type of $var is similar to type of $compare
  * - 'equal'     : whether type of $var is identical to type of $compare
@@ -201,7 +201,7 @@ function PMA_securePath($path)
  * @param string|array $message_args   arguments applied to $error_message
  * @param boolean      $delete_session whether to delete session cookie
  *
- * @return exit
+ * @return void
  */
 function PMA_fatalError(
     $error_message, $message_args = null, $delete_session = true
@@ -220,12 +220,9 @@ function PMA_fatalError(
     } else {
         $error_message = strtr($error_message, array('<br />' => '[br]'));
 
-        /* Define fake gettext for fatal errors */
+        /* Load gettext for fatal errors */
         if (!function_exists('__')) {
-            function __($text)
-            {
-                return $text;
-            }
+            include_once './libraries/php-gettext/gettext.inc';
         }
 
         // these variables are used in the included file libraries/error.inc.php
@@ -305,7 +302,7 @@ function PMA_warnMissingExtension($extension, $fatal = false, $extra = '')
         PMA_fatalError($message);
     } else {
         $GLOBALS['error_handler']->addError(
-            $message, 
+            $message,
             E_USER_WARNING,
             '',
             '',
@@ -323,13 +320,13 @@ function PMA_warnMissingExtension($extension, $fatal = false, $extra = '')
  */
 function PMA_getTableCount($db)
 {
-    $tables = PMA_DBI_try_query(
+    $tables = $GLOBALS['dbi']->tryQuery(
         'SHOW TABLES FROM ' . PMA_Util::backquote($db) . ';',
-        null, PMA_DBI_QUERY_STORE
+        null, PMA_DatabaseInterface::QUERY_STORE
     );
     if ($tables) {
-        $num_tables = PMA_DBI_num_rows($tables);
-        PMA_DBI_free_result($tables);
+        $num_tables = $GLOBALS['dbi']->numRows($tables);
+        $GLOBALS['dbi']->freeResult($tables);
     } else {
         $num_tables = 0;
     }
@@ -469,8 +466,8 @@ function PMA_arrayWalkRecursive(&$array, $function, $apply_to_keys_also = false)
 /**
  * boolean phpMyAdmin.PMA_checkPageValidity(string &$page, array $whitelist)
  *
- * checks given given $page against given $whitelist and returns true if valid
- * it ignores optionaly query paramters in $page (script.php?ignored)
+ * checks given $page against given $whitelist and returns true if valid
+ * it optionally ignores query parameters in $page (script.php?ignored)
  *
  * @param string &$page     page to check
  * @param array  $whitelist whitelist to check page against
@@ -515,7 +512,8 @@ function PMA_getenv($var_name)
     } elseif (getenv($var_name)) {
         return getenv($var_name);
     } elseif (function_exists('apache_getenv')
-     && apache_getenv($var_name, true)) {
+        && apache_getenv($var_name, true)
+    ) {
         return apache_getenv($var_name, true);
     }
 
@@ -562,7 +560,7 @@ function PMA_sendHeaderLocation($uri, $use_refresh = false)
             if (strpos($uri, '?') === false) {
                 header('Location: ' . $uri . '?' . SID);
             } else {
-                $separator = PMA_get_arg_separator();
+                $separator = PMA_URL_getArgSeparator();
                 header('Location: ' . $uri . $separator . SID);
             }
         } else {
@@ -650,12 +648,39 @@ function PMA_downloadHeader($filename, $mimetype, $length = 0, $no_cache = true)
         header('Content-Disposition: attachment; filename="' . $filename . '"');
     }
     header('Content-Type: ' . $mimetype);
+    // inform the server that compression has been done,
+    // to avoid a double compression (for example with Apache + mod_deflate)
+    if (strpos($mimetype, 'gzip') !== false) {
+        header('Content-Encoding: gzip');
+    }
     header('Content-Transfer-Encoding: binary');
     if ($length > 0) {
         header('Content-Length: ' . $length);
     }
 }
 
+/**
+ * Checks whether element given by $path exists in $array.
+ * $path is a string describing position of an element in an associative array,
+ * eg. Servers/1/host refers to $array[Servers][1][host]
+ *
+ * @param string $path  path in the arry
+ * @param array  $array the array
+ *
+ * @return mixed    array element or $default
+ */
+function PMA_arrayKeyExists($path, $array)
+{
+    $keys = explode('/', $path);
+    $value =& $array;
+    foreach ($keys as $key) {
+        if (! isset($value[$key])) {
+            return false;
+        }
+        $value =& $value[$key];
+    }
+    return true;
+}
 
 /**
  * Returns value of an element in $array given by $path.
@@ -758,12 +783,12 @@ function PMA_linkURL($url)
     if (!preg_match('#^https?://#', $url) || defined('PMA_SETUP')) {
         return $url;
     } else {
-        if (!function_exists('PMA_generate_common_url')) {
+        if (!function_exists('PMA_URL_getCommon')) {
             include_once './libraries/url_generating.lib.php';
         }
         $params = array();
         $params['url'] = $url;
-        return './url.php' . PMA_generate_common_url($params);
+        return './url.php' . PMA_URL_getCommon($params);
     }
 }
 

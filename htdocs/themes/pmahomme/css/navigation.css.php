@@ -19,7 +19,6 @@ if (! defined('PMA_MINIMUM_COMMON') && ! defined('TESTSUITE')) {
 #pma_navigation {
     width: <?php echo $GLOBALS['cfg']['NaviWidth']; ?>px;
     overflow: hidden;
-    overflow-y: auto;
     position: fixed;
     top: 0;
     <?php echo $left; ?>: 0;
@@ -31,6 +30,7 @@ if (! defined('PMA_MINIMUM_COMMON') && ! defined('TESTSUITE')) {
 
 #pma_navigation_content {
     width: 100%;
+    height: 100%;
     position: absolute;
     top: 0;
     <?php echo $left; ?>: 0;
@@ -73,7 +73,7 @@ if (! defined('PMA_MINIMUM_COMMON') && ! defined('TESTSUITE')) {
 #pma_navigation #databaseList,
 #pma_navigation div.pageselector.dbselector {
     text-align: center;
-    margin: 5px 10px 0px;
+    padding: 5px 10px 0px;
     border: 0;
 }
 
@@ -84,15 +84,24 @@ if (! defined('PMA_MINIMUM_COMMON') && ! defined('TESTSUITE')) {
 }
 
 #pma_navigation_content > img.throbber {
-    display: block;
+    display: none;
     margin: .3em auto 0;
 }
 
 /* Navigation tree*/
 #pma_navigation_tree {
-    margin: 5px 0 0;
+    margin: 0;
     margin-<?php echo $left; ?>: 10px;
     color: #444;
+    height: 74%;
+    position: relative;
+}
+#pma_navigation_tree_content {
+    width: 100%;
+    overflow: hidden;
+    overflow-y: auto;
+    position: absolute;
+    height: 100%;
 }
 #pma_navigation_tree a {
     color: <?php echo $GLOBALS['cfg']['NaviColor']; ?>;
@@ -103,6 +112,25 @@ if (! defined('PMA_MINIMUM_COMMON') && ! defined('TESTSUITE')) {
 #pma_navigation_tree li.activePointer {
     color: <?php echo $GLOBALS['cfg']['NaviPointerColor']; ?>;
     background-color: <?php echo $GLOBALS['cfg']['NaviPointerBackground']; ?>;
+}
+#pma_navigation_tree li.selected {
+    color: <?php echo $GLOBALS['cfg']['NaviPointerColor']; ?>;
+    background-color: <?php echo $GLOBALS['cfg']['NaviPointerBackground']; ?>;
+}
+#pma_navigation_tree li .dbItemControls {
+    padding-left: 4px;
+}
+#pma_navigation_tree li .navItemControls {
+    display: none;
+    padding-left: 4px;
+}
+#pma_navigation_tree li.activePointer .navItemControls {
+    display: inline;
+    opacity: 0.5;
+}
+#pma_navigation_tree li.activePointer .navItemControls:hover {
+    display: inline;
+    opacity: 1.0;
 }
 #pma_navigation_tree ul {
     clear: both;
@@ -197,7 +225,7 @@ li.fast_filter {
     border-<?php echo $left; ?>: 1px solid #666;
 }
 li.fast_filter input {
-    padding-<?php echo $right; ?>: .4em;
+    padding-<?php echo $right; ?>: 1.7em;
     width: 100%;
 }
 li.fast_filter span {
@@ -207,6 +235,21 @@ li.fast_filter span {
     cursor: pointer;
     font-weight: bold;
     color: #800;
+}
+/* IE10+ has its own reset X */
+html.ie li.fast_filter span {
+    display: none;
+}
+html.ie.ie9 li.fast_filter span,
+html.ie.ie8 li.fast_filter span {
+    display: auto;
+}
+html.ie li.fast_filter input {
+    padding-<?php echo $right; ?>: .2em;
+}
+html.ie.ie9 li.fast_filter input,
+html.ie.ie8 li.fast_filter input {
+    padding-<?php echo $right; ?>: 1.7em;
 }
 li.fast_filter.db_fast_filter {
     border: 0;

@@ -15,7 +15,8 @@ if (! defined('PHPMYADMIN')) {
 /**
  * We need way to disable external XML entities processing.
  */
-if (!function_exists('libxml_disable_entity_loader')) {
+if (! function_exists('libxml_disable_entity_loader')) {
+    $GLOBALS['skip_import'] = true;
     return;
 }
 
@@ -136,7 +137,7 @@ class ImportOds extends ImportPlugin
             $data = PMA_importGetNextChunk();
             if ($data === false) {
                 /* subtract data we didn't handle yet and stop processing */
-                $offset -= strlen($buffer);
+                $GLOBALS['offset'] -= strlen($buffer);
                 break;
             } elseif ($data === true) {
                 /* Handle rest of buffer */
@@ -167,21 +168,21 @@ class ImportOds extends ImportPlugin
 
         if ($xml === false) {
             $sheets = array();
-            $message = PMA_Message::error(
+            $GLOBALS['message'] = PMA_Message::error(
                 __(
                     'The XML file specified was either malformed or incomplete.'
                     . ' Please correct the issue and try again.'
                 )
             );
-            $error = true;
+            $GLOBALS['error'] = true;
         } else {
             $root = $xml->children('office', true)->{'body'}->{'spreadsheet'};
             if (empty($root)) {
                 $sheets = array();
-                $message = PMA_Message::error(
-                    __('Could not parse OpenDocument Spreasheet!')
+                $GLOBALS['message'] = PMA_Message::error(
+                    __('Could not parse OpenDocument Spreadsheet!')
                 );
-                $error = true;
+                $GLOBALS['error'] = true;
             } else {
                 $sheets = $root->children('table', true);
             }
@@ -191,7 +192,6 @@ class ImportOds extends ImportPlugin
 
         $max_cols = 0;
 
-        $row_count = 0;
         $col_count = 0;
         $col_names = array();
 

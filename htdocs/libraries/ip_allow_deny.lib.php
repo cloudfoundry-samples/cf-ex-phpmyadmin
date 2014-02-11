@@ -152,15 +152,19 @@ function PMA_ipv4MaskTest($testRange, $ipToTest)
  * Modified for phpMyAdmin
  *
  * Matches:
- * xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx         (exact)
- * xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:[yyyy-zzzz]  (range, only at end of IP - no subnets)
- * xxxx:xxxx:xxxx:xxxx/nn                          (CIDR)
+ * xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx
+ * (exact)
+ * xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:[yyyy-zzzz]
+ * (range, only at end of IP - no subnets)
+ * xxxx:xxxx:xxxx:xxxx/nn
+ * (CIDR)
  *
  * Does not match:
- * xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xx[yyy-zzz]  (range, partial octets not supported)
+ * xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xx[yyy-zzz]
+ * (range, partial octets not supported)
  *
- * @param string $test_range  string of IP range to match
- * @param string $ip_to_test  string of IP to test against range
+ * @param string $test_range string of IP range to match
+ * @param string $ip_to_test string of IP to test against range
  *
  * @return boolean    whether the IP mask matches
  *
@@ -169,7 +173,7 @@ function PMA_ipv4MaskTest($testRange, $ipToTest)
 function PMA_ipv6MaskTest($test_range, $ip_to_test)
 {
     $result = true;
-    
+
     // convert to lowercase for easier comparison
     $test_range = strtolower($test_range);
     $ip_to_test = strtolower($ip_to_test);
@@ -186,7 +190,10 @@ function PMA_ipv6MaskTest($test_range, $ip_to_test)
     } elseif ($is_range) {
         // what range do we operate on?
         $range_match = array();
-        if (preg_match('/\[([0-9a-f]+)\-([0-9a-f]+)\]/', $test_range, $range_match)) {
+        $match = preg_match(
+            '/\[([0-9a-f]+)\-([0-9a-f]+)\]/', $test_range, $range_match
+        );
+        if ($match) {
             $range_start = $range_match[1];
             $range_end   = $range_match[2];
 
@@ -217,24 +224,24 @@ function PMA_ipv6MaskTest($test_range, $ip_to_test)
 
         $pos = 31;
         while ($flexbits > 0) {
-          // Get the character at this position
-          $orig = substr($last_hex, $pos, 1);
+            // Get the character at this position
+            $orig = substr($last_hex, $pos, 1);
 
-          // Convert it to an integer
-          $origval = hexdec($orig);
+            // Convert it to an integer
+            $origval = hexdec($orig);
 
-          // OR it with (2^flexbits)-1, with flexbits limited to 4 at a time
-          $newval = $origval | (pow(2, min(4, $flexbits)) - 1);
+            // OR it with (2^flexbits)-1, with flexbits limited to 4 at a time
+            $newval = $origval | (pow(2, min(4, $flexbits)) - 1);
 
-          // Convert it back to a hexadecimal character
-          $new = dechex($newval);
+            // Convert it back to a hexadecimal character
+            $new = dechex($newval);
 
-          // And put that character back in the string
-          $last_hex = substr_replace($last_hex, $new, $pos, 1);
+            // And put that character back in the string
+            $last_hex = substr_replace($last_hex, $new, $pos, 1);
 
-          // We processed one nibble, move to previous position
-          $flexbits -= 4;
-          $pos -= 1;
+            // We processed one nibble, move to previous position
+            $flexbits -= 4;
+            $pos -= 1;
         }
 
         // check if the IP to test is within the range

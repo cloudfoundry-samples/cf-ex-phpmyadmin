@@ -368,70 +368,11 @@ img.lightbulb {
     border:             1px dashed #000000;
 }
 
-/* MySQL Parser */
-.syntax {
-    font-size:          80%;
-}
-
-.syntax a {
+/* Doc links in SQL */
+.cm-sql-doc {
     text-decoration: none;
-    border-bottom:1px dotted black;
-}
-
-.syntax_comment {
-    padding-left:       4pt;
-    padding-right:      4pt;
-}
-
-.syntax_digit {
-}
-
-.syntax_digit_hex {
-}
-
-.syntax_digit_integer {
-}
-
-.syntax_digit_float {
-}
-
-.syntax_punct {
-}
-
-.syntax_alpha {
-}
-
-.syntax_alpha_columnType {
-    text-transform:     uppercase;
-}
-
-.syntax_alpha_columnAttrib {
-    text-transform:     uppercase;
-}
-
-.syntax_alpha_reservedWord {
-    text-transform:     uppercase;
-    font-weight:        bold;
-}
-
-.syntax_alpha_functionName {
-    text-transform:     uppercase;
-}
-
-.syntax_alpha_identifier {
-}
-
-.syntax_alpha_charset {
-}
-
-.syntax_alpha_variable {
-}
-
-.syntax_quote {
-    white-space:        pre;
-}
-
-.syntax_quote_backtick {
+    border-bottom: 1px dotted #000;
+    color: inherit !important;
 }
 
 /* leave some space between icons and text */
@@ -452,7 +393,7 @@ td .icon {
 }
 
 /* message boxes: error, confirmation */
-#pma_errors {
+#pma_errors, #pma_demo {
     padding: 0 0.5em;
 }
 
@@ -816,6 +757,7 @@ div#tablestatistics table {
     margin-top: 0.5em;
     margin-bottom: 0.5em;
     margin-<?php echo $right; ?>: 0.5em;
+    min-width: 16em;
 }
 /* END table stats */
 
@@ -847,7 +789,6 @@ div#tablestatistics table {
 
 #serverinfo .item {
     white-space:        nowrap;
-    float: <?php echo $left; ?>
 }
 
 #goto_pagetop {
@@ -860,9 +801,12 @@ div#tablestatistics table {
 }
 
 #span_table_comment {
-    font-weight:        normal;
-    font-style:         italic;
-    white-space:        nowrap;
+    font-weight: bold;
+    font-style: italic;
+    white-space: nowrap;
+    margin-left: 10px;  
+    color: #D6D6D6;
+    text-shadow: none;
 }
 
 #serverinfo img {
@@ -951,6 +895,14 @@ div#tablestatistics table {
 
 #fieldset_user_global_rights fieldset {
     float: <?php echo $left; ?>;
+}
+
+#fieldset_user_group_rights fieldset {
+    float: <?php echo $left; ?>;
+}
+
+#fieldset_user_global_rights legend input {
+    margin-<?php echo $left; ?>: 2em;
 }
 /* END user privileges */
 
@@ -1183,6 +1135,34 @@ div#profilingchart {
     float: left;
 }
 
+#profilingchart .jqplot-highlighter-tooltip{
+    top: auto !important;
+    left: 11px;
+    bottom:24px;
+}
+
+#profilesummarytable th.header, #profiletable th.header{
+    cursor: pointer;
+}
+
+#profilesummarytable th.header .sorticon, #profiletable th.header .sorticon{
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-position: right center;
+    display: inline-block;
+    vertical-align: middle;
+    float: right;
+}
+
+#profilesummarytable th.headerSortUp .sorticon, #profiletable th.headerSortUp .sorticon{
+    background-image: url(<?php echo $_SESSION['PMA_Theme']->getImgPath('s_desc.png');?>);
+}
+
+#profilesummarytable th.headerSortDown .sorticon, #profiletable th.headerSortDown .sorticon{
+    background-image: url(<?php echo $_SESSION['PMA_Theme']->getImgPath('s_asc.png');?>);
+}
+
 /* END profiling */
 
 /* querybox */
@@ -1244,7 +1224,7 @@ div#queryboxcontainer div#bookmarkoptions {
 /* iconic view for ul items */
 
 li.no_bullets {
-    list-style-type:none !important;    
+    list-style-type:none !important;
     margin-left: -25px !important;      //align with other list items which have bullets
 }
 
@@ -1301,7 +1281,22 @@ li.no_bullets {
     width: 48%;
     float: <?php echo $left; ?>;
 }
-
+.operations_half_width input[type=text],
+.operations_half_width input[type=password],
+.operations_half_width input[type=number],
+.operations_half_width select {
+    width: 95%;
+}
+.operations_half_width input[type=text].halfWidth,
+.operations_half_width input[type=password].halfWidth,
+.operations_half_width input[type=number].halfWidth,
+.operations_half_width select.halfWidth {
+    width: 40%;
+}
+.operations_half_width ul {
+    list-style-type: none;
+    padding: 0;
+}
 .operations_full_width {
     width: 100%;
     clear: both;
@@ -1330,11 +1325,21 @@ div.sqlvalidate {
     padding:            0.3em;
     margin-top:         0;
     margin-bottom:      0;
+    max-height:         10em;
+    overflow:           auto;
+}
+
+#result_query div.sqlOuter,
+div.sqlvalidate  {
     border:             <?php echo $GLOBALS['cfg']['MainColor']; ?> solid 1px;
     border-top:         0;
     border-bottom:      0;
-    max-height:         10em;
-    overflow:           auto;
+    background:         <?php echo $GLOBALS['cfg']['BgOne']; ?>;
+}
+
+#PMA_slidingMessage code.sql {
+    border:             <?php echo $GLOBALS['cfg']['MainColor']; ?> solid 1px;
+    border-top:         0;
     background:         <?php echo $GLOBALS['cfg']['BgOne']; ?>;
 }
 
@@ -1402,7 +1407,7 @@ div.upload_progress_bar_outer
 
 div.upload_progress_bar_inner
 {
-    background-color: <?php echo $GLOBALS['cfg']['NaviBackground']; ?>;
+    background-color: <?php echo $GLOBALS['cfg']['NaviPointerBackground']; ?>;
     width: 0;
     height: 12px;
     margin: 1px;
@@ -1439,6 +1444,9 @@ table#serverconnection_trg_local  {
   *  Validation error message styles
   */
 input[type=text].invalid_value,
+input[type=password].invalid_value,
+input[type=number].invalid_value,
+input[type=date].invalid_value,
 .invalid_value {
     background: #FFCCCC;
 }
@@ -1810,7 +1818,7 @@ fieldset .disabled-field td {
 }
 
 .config-form .lastrow {
-    background: <?php echo $GLOBALS['cfg']['ThBackground']; ?>;;
+    background: <?php echo $GLOBALS['cfg']['ThBackground']; ?>;
     padding: .5em;
     text-align: center;
 }
@@ -1841,6 +1849,8 @@ fieldset .disabled-field td {
 }
 
 .config-form input[type="text"],
+.config-form input[type="password"],
+.config-form input[type="number"],
 .config-form select,
 .config-form textarea {
     border: 1px #A7A6AA solid;
@@ -1848,6 +1858,8 @@ fieldset .disabled-field td {
 }
 
 .config-form input[type="text"]:focus,
+.config-form input[type="password"]:focus,
+.config-form input[type="number"]:focus,
 .config-form select:focus,
 .config-form textarea:focus {
     border:     1px #6676FF solid;
@@ -1951,6 +1963,9 @@ fieldset .disabled-field td {
 }
 
 #table_columns input[type="text"],
+#table_columns input[type="password"],
+#table_columns input[type="number"],
+#table_columns input[type="date"],
 #table_columns select {
     width:              10em;
     box-sizing:         border-box;
@@ -2187,7 +2202,9 @@ fieldset .disabled-field td {
     position: absolute;
 }
 
-.cEdit input[type=text] {
+.cEdit input[type=text],
+.cEdit input[type=password],
+.cEdit input[type=number] {
     background: #FFF;
     height: 100%;
     margin: 0;
@@ -2225,6 +2242,11 @@ fieldset .disabled-field td {
 .cEdit .edit_area_loading {
     background: #FFF url(<?php echo $_SESSION['PMA_Theme']->getImgPath('ajax_clock_small.gif');?>) no-repeat center;
     height: 10em;
+}
+
+.cEdit .edit_area_right {
+    position: absolute;
+    right: 0;
 }
 
 .cEdit .goto_link {
@@ -2518,4 +2540,23 @@ div.jqplot-bubble-label.jqplot-bubble-label-highlight {
 div.jqplot-noData-container {
     text-align: center;
     background-color: rgba(96%, 96%, 96%, 0.3);
+}
+
+#relationalTable select {
+    width: 125px;
+    margin-right: 5px;
+}
+
+.report-data {
+    height:13em;
+    overflow:scroll;
+    width:570px;
+    border: solid 1px;
+    background: white;
+    padding: 2px;
+}
+
+.report-description {
+    height:10em;
+    width:570px;
 }

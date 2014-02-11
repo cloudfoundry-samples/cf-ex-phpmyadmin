@@ -1,1 +1,490 @@
-var $data_a;function PMA_urldecode(a){return decodeURIComponent(a.replace(/\+/g,"%20"))}function PMA_urlencode(a){return encodeURIComponent(a).replace(/\%20/g,"+")}function getFieldName(c){var b=c.index();var a=!$("#table_results").find("th:first").hasClass("draggable");var f=a?$("#table_results").find("th:first").attr("colspan")-1:0;var e=$("#table_results").find("thead").find("th:eq("+(b-f)+") a").text();if(""==e){var d=$("#table_results").find("thead").find("th:eq("+(b-f)+")").children("span");var g=d.children().detach();e=d.text();d.append(g)}e=$.trim(e);return e}AJAX.registerTeardown("sql.js",function(){$("a.delete_row.ajax").unbind("click");$("#bookmarkQueryForm").die("submit");$("input#bkm_label").unbind("keyup");$("#sqlqueryresults").die("makegrid");$("#togglequerybox").unbind("click");$("#button_submit_query").die("click");$("input[name=bookmark_variable]").unbind("keypress");$("#sqlqueryform.ajax").die("submit");$("input[name=navig].ajax").die("click");$("#pageselector").die("change");$("#table_results.ajax").find("a[title=Sort]").die("click");$("#displayOptionsForm.ajax").die("submit");$("#resultsForm.ajax .mult_submit[value=edit]").die("click");$("#insertForm .insertRowTable.ajax input[type=submit]").die("click");$("#buttonYes.ajax").die("click");$("a.browse_foreign").die("click");$("th.column_heading.pointer").die("hover");$("th.column_heading.marker").die("click")});AJAX.registerOnload("sql.js",function(){$("a.delete_row.ajax").click(function(c){c.preventDefault();var b=$.sprintf(PMA_messages.strDoYouReally,$(this).closest("td").find("div").text());var a=$(this);a.PMA_confirm(b,a.attr("href"),function(d){$msgbox=PMA_ajaxShowMessage();$.get(d,{ajax_request:true,is_js_confirmed:true},function(e){if(e.success){PMA_ajaxShowMessage(e.message);a.closest("tr").remove()}else{PMA_ajaxShowMessage(e.error,false)}})})});$("#bookmarkQueryForm").live("submit",function(a){a.preventDefault();PMA_ajaxShowMessage();$.post($(this).attr("action"),"ajax_request=1&"+$(this).serialize(),function(b){if(b.success){PMA_ajaxShowMessage(b.message)}else{PMA_ajaxShowMessage(b.error,false)}})});$("input#bkm_label").keyup(function(){$("input#id_bkm_all_users, input#id_bkm_replace").parent().toggle($(this).val().length>0)}).trigger("keyup");$("#sqlqueryresults").live("makegrid",function(){PMA_makegrid($("#table_results")[0])});if(!$("#sqlqueryform").find("a").is("#togglequerybox")){$('<a id="togglequerybox"></a>').html(PMA_messages.strHideQueryBox).appendTo("#sqlqueryform").hide();$("#togglequerybox").bind("click",function(){var a=$(this);a.siblings().slideToggle("fast");if(a.text()==PMA_messages.strHideQueryBox){a.text(PMA_messages.strShowQueryBox);$("#togglequerybox_spacer").remove();a.before('<br id="togglequerybox_spacer" />')}else{a.text(PMA_messages.strHideQueryBox)}return false})}$("#button_submit_query").live("click",function(b){var a=$(this).closest("form");a.find("select[name=id_bookmark]").val("")});$("input[name=bookmark_variable]").bind("keypress",function(b){var a=(b.keyCode?b.keyCode:(b.which?b.which:b.charCode));if(a==13){$("#button_submit_bookmark").click();return false}else{return true}});$("#sqlqueryform.ajax").live("submit",function(c){c.preventDefault();var b=$(this);if(!checkSqlQuery(b[0])){return false}$("div.error").remove();var d=PMA_ajaxShowMessage();var a=$("#sqlqueryresults");PMA_prepareForAjaxRequest(b);$.post(b.attr("action"),b.serialize(),function(e){if(e.success==true){$("div.success, div.sqlquery_message").fadeOut();if($("#result_query").length){$("#result_query").remove()}if(typeof e.action_bookmark!="undefined"){if("1"==e.action_bookmark){$("#sqlquery").text(e.sql_query);setQuery(e.sql_query)}if("2"==e.action_bookmark){$("#id_bookmark option[value='"+e.id_bookmark+"']").remove()}a.show().html(e.message)}else{if(typeof e.sql_query!="undefined"){$('<div class="sqlquery_message"></div>').html(e.sql_query).insertBefore("#sqlqueryform");$("div.notice").remove()}else{a.show().html(e.message)}}if(typeof e.ajax_reload!="undefined"){if(e.ajax_reload.reload){if(e.ajax_reload.table_name){PMA_commonParams.set("table",e.ajax_reload.table_name);PMA_commonActions.refreshMain()}else{PMA_reloadNavigation()}}}else{if(typeof e.reload!="undefined"){PMA_commonActions.setDb(e.db);PMA_commonActions.refreshMain(false,function(){if($("#result_query").length){$("#result_query").remove()}if(e.sql_query){$('<div id="result_query"></div>').html(e.sql_query).prependTo("#page_content")}});PMA_reloadNavigation()}}a.show().trigger("makegrid");$("#togglequerybox").show();PMA_init_slider();if(typeof e.action_bookmark=="undefined"){if($('#sqlqueryform input[name="retain_query_box"]').is(":checked")!=true){if($("#togglequerybox").siblings(":visible").length>0){$("#togglequerybox").trigger("click")}}}}else{if(e.success==false){$("#sqlqueryform").before(e.error);a.hide()}}PMA_ajaxRemoveMessage(d)})});$("#pageselector").live("change",function(b){var a=$(this).parent("form");a.submit()});$("#displayOptionsForm.ajax").live("submit",function(a){a.preventDefault();$form=$(this);$.post($form.attr("action"),$form.serialize()+"&ajax_request=true",function(b){$("#sqlqueryresults").html(b.message).trigger("makegrid");PMA_init_slider()})});$("#resultsForm.ajax .mult_submit[value=edit]").live("click",function(d){d.preventDefault();if($("#table_results tbody tr, #table_results tbody tr td").hasClass("marked")){var a=$('<div id="change_row_dialog"></div>');var c={};c[PMA_messages.strCancel]=function(){$(this).dialog("close")};var e={};e[PMA_messages.strOK]=function(){$(this).dialog("close")};var b=$("#resultsForm");var f=PMA_ajaxShowMessage();$.get(b.attr("action"),b.serialize()+"&ajax_request=true&submit_mult=row_edit",function(g){if(g.success!=undefined&&g.success==false){a.append(g.error).dialog({title:PMA_messages.strChangeTbl,height:230,width:900,open:PMA_verifyColumnsProperties,close:function(h,i){$(this).remove()},buttons:e})}else{a.append(g.message).dialog({title:PMA_messages.strChangeTbl,height:600,width:900,open:PMA_verifyColumnsProperties,close:function(h,i){$(this).remove()},buttons:c}).find("#topmenucontainer").hide();$("table.insertRowTable").addClass("ajax");$("#buttonYes").addClass("ajax")}PMA_ajaxRemoveMessage(f)})}else{PMA_ajaxShowMessage(PMA_messages.strNoRowSelected)}});$("#insertForm .insertRowTable.ajax input[type=submit]").live("click",function(b){b.preventDefault();var a=$("#insertForm");PMA_prepareForAjaxRequest(a);$.post(a.attr("action"),a.serialize(),function(c){if(c.success==true){PMA_ajaxShowMessage(c.message);if($("#pageselector").length!=0){$("#pageselector").trigger("change")}else{$("input[name=navig].ajax").trigger("click")}}else{PMA_ajaxShowMessage(c.error,false);$("#table_results tbody tr.marked .multi_checkbox , #table_results tbody tr td.marked .multi_checkbox").prop("checked",false);$("#table_results tbody tr.marked .multi_checkbox , #table_results tbody tr td.marked .multi_checkbox").removeClass("last_clicked");$("#table_results tbody tr, #table_results tbody tr td").removeClass("marked")}if($("#change_row_dialog").length>0){$("#change_row_dialog").dialog("close").remove()}$("#result_query").remove();$("#sqlqueryresults").prepend(c.sql_query);$("#result_query .notice").remove();$("#result_query").prepend((c.message))})});$("#buttonYes.ajax").live("click",function(c){c.preventDefault();var a=$("#insertForm");var b=$("#insertForm").find("#actions_panel .control_at_footer option:selected").val();$("#result_query").remove();PMA_prepareForAjaxRequest(a);$.post(a.attr("action"),a.serialize(),function(d){if(d.success==true){PMA_ajaxShowMessage(d.message);if(b=="showinsert"){$("#sqlqueryresults").prepend(d.sql_query);$("#result_query .notice").remove();$("#result_query").prepend(d.message);$("#table_results tbody tr.marked .multi_checkbox , #table_results tbody tr td.marked .multi_checkbox").prop("checked",false);$("#table_results tbody tr.marked .multi_checkbox , #table_results tbody tr td.marked .multi_checkbox").removeClass("last_clicked");$("#table_results tbody tr, #table_results tbody tr td").removeClass("marked")}else{if($("#pageselector").length!=0){$("#pageselector").trigger("change")}else{$("input[name=navig].ajax").trigger("click")}$("#result_query").remove();$("#sqlqueryresults").prepend(d.sql_query);$("#result_query .notice").remove();$("#result_query").prepend((d.message))}}else{PMA_ajaxShowMessage(d.error,false);$("#table_results tbody tr.marked .multi_checkbox , #table_results tbody tr td.marked .multi_checkbox").prop("checked",false);$("#table_results tbody tr.marked .multi_checkbox , #table_results tbody tr td.marked .multi_checkbox").removeClass("last_clicked");$("#table_results tbody tr, #table_results tbody tr td").removeClass("marked")}if($("#change_row_dialog").length>0){$("#change_row_dialog").dialog("close").remove()}})})});function PMA_changeClassForColumn(b,a,d){var e=b.index();var c=!b.closest("tr").children(":first").hasClass("column_heading");if(c){e--}var f=b.closest("table").find("tbody tr").find("td.data:eq("+e+")");if(d==undefined){f.toggleClass(a)}else{f.toggleClass(a,d)}}AJAX.registerOnload("sql.js",function(){$("a.browse_foreign").live("click",function(a){a.preventDefault();window.open(this.href,"foreigners","width=640,height=240,scrollbars=yes,resizable=yes");$anchor=$(this);$anchor.addClass("browse_foreign_clicked")});$("th.column_heading.pointer").live("hover",function(a){PMA_changeClassForColumn($(this),"hover",a.type=="mouseenter")});$("th.column_heading.marker").live("click",function(){PMA_changeClassForColumn($(this),"marked")});$("#sqlqueryresults").trigger("makegrid")});function makeProfilingChart(){if($("#profilingchart").length==0||$("#profilingchart").html().length!=0){return}var a=[];$.each(jQuery.parseJSON($("#profilingChartData").html()),function(b,c){a.push([b,parseFloat(c)])});$("#profilingchart").html("").show();$("#profilingChartData").html("");PMA_createProfilingChartJqplot("profilingchart",a)};
+/* vim: set expandtab sw=4 ts=4 sts=4: */
+/**
+ * @fileoverview    functions used wherever an sql query form is used
+ *
+ * @requires    jQuery
+ * @requires    js/functions.js
+ *
+ */
+
+var $data_a;
+
+/**
+ * decode a string URL_encoded
+ *
+ * @param string str
+ * @return string the URL-decoded string
+ */
+function PMA_urldecode(str)
+{
+    return decodeURIComponent(str.replace(/\+/g, '%20'));
+}
+
+/**
+ * endecode a string URL_decoded
+ *
+ * @param string str
+ * @return string the URL-encoded string
+ */
+function PMA_urlencode(str)
+{
+    return encodeURIComponent(str).replace(/\%20/g, '+');
+}
+
+/**
+ * Get the field name for the current field.  Required to construct the query
+ * for grid editing
+ *
+ * @param $this_field  jQuery object that points to the current field's tr
+ */
+function getFieldName($this_field)
+{
+
+    var this_field_index = $this_field.index();
+    // ltr or rtl direction does not impact how the DOM was generated
+    // check if the action column in the left exist
+    var left_action_exist = !$('#table_results').find('th:first').hasClass('draggable');
+    // number of column span for checkbox and Actions
+    var left_action_skip = left_action_exist ? $('#table_results').find('th:first').attr('colspan') - 1 : 0;
+    var field_name = $('#table_results').find('thead').find('th:eq(' + (this_field_index - left_action_skip) + ') a').text();
+    // happens when just one row (headings contain no a)
+    if (field_name === '') {
+        var $heading = $('#table_results').find('thead').find('th:eq(' + (this_field_index - left_action_skip) + ')').children('span');
+        // may contain column comment enclosed in a span - detach it temporarily to read the column name
+        var $tempColComment = $heading.children().detach();
+        field_name = $heading.text();
+        // re-attach the column comment
+        $heading.append($tempColComment);
+    }
+
+    field_name = $.trim(field_name);
+
+    return field_name;
+}
+
+/**
+ * Unbind all event handlers before tearing down a page
+ */
+AJAX.registerTeardown('sql.js', function () {
+    $('a.delete_row.ajax').die('click');
+    $('#bookmarkQueryForm').die('submit');
+    $('input#bkm_label').unbind('keyup');
+    $("#sqlqueryresults").die('makegrid');
+    $("#togglequerybox").unbind('click');
+    $("#button_submit_query").die('click');
+    $("input[name=bookmark_variable]").unbind("keypress");
+    $("#sqlqueryform.ajax").die('submit');
+    $("input[name=navig].ajax").die('click');
+    $("#pageselector").die('change');
+    $("#table_results.ajax").find("a[title=Sort]").die('click');
+    $("#displayOptionsForm.ajax").die('submit');
+    $('a.browse_foreign').die('click');
+    $('th.column_heading.pointer').die('hover');
+    $('th.column_heading.marker').die('click');
+});
+
+/**
+ * @description <p>Ajax scripts for sql and browse pages</p>
+ *
+ * Actions ajaxified here:
+ * <ul>
+ * <li>Retrieve results of an SQL query</li>
+ * <li>Paginate the results table</li>
+ * <li>Sort the results table</li>
+ * <li>Change table according to display options</li>
+ * <li>Grid editing of data</li>
+ * <li>Saving a bookmark</li>
+ * </ul>
+ *
+ * @name        document.ready
+ * @memberOf    jQuery
+ */
+AJAX.registerOnload('sql.js', function () {
+    // Delete row from SQL results
+    $('a.delete_row.ajax').live('click', function (e) {
+        e.preventDefault();
+        var question = $.sprintf(PMA_messages.strDoYouReally, $(this).closest('td').find('div').text());
+        var $link = $(this);
+        $link.PMA_confirm(question, $link.attr('href'), function (url) {
+            $msgbox = PMA_ajaxShowMessage();
+            $.get(url, {'ajax_request': true, 'is_js_confirmed': true}, function (data) {
+                if (data.success) {
+                    PMA_ajaxShowMessage(data.message);
+                    $link.closest('tr').remove();
+                } else {
+                    PMA_ajaxShowMessage(data.error, false);
+                }
+            });
+        });
+    });
+
+    // Ajaxification for 'Bookmark this SQL query'
+    $('#bookmarkQueryForm').live('submit', function (e) {
+        e.preventDefault();
+        PMA_ajaxShowMessage();
+        $.post($(this).attr('action'), 'ajax_request=1&' + $(this).serialize(), function (data) {
+            if (data.success) {
+                PMA_ajaxShowMessage(data.message);
+            } else {
+                PMA_ajaxShowMessage(data.error, false);
+            }
+        });
+    });
+
+    /* Hides the bookmarkoptions checkboxes when the bookmark label is empty */
+    $('input#bkm_label').keyup(function () {
+        $('input#id_bkm_all_users, input#id_bkm_replace')
+            .parent()
+            .toggle($(this).val().length > 0);
+    }).trigger('keyup');
+
+    /**
+     * Attach the {@link makegrid} function to a custom event, which will be
+     * triggered manually everytime the table of results is reloaded
+     * @memberOf    jQuery
+     */
+    $("#sqlqueryresults").live('makegrid', function () {
+        PMA_makegrid($('#table_results')[0]);
+    });
+
+    /**
+     * Append the "Show/Hide query box" message to the query input form
+     *
+     * @memberOf jQuery
+     * @name    appendToggleSpan
+     */
+    // do not add this link more than once
+    if (! $('#sqlqueryform').find('a').is('#togglequerybox')) {
+        $('<a id="togglequerybox"></a>')
+        .html(PMA_messages.strHideQueryBox)
+        .appendTo("#sqlqueryform")
+        // initially hidden because at this point, nothing else
+        // appears under the link
+        .hide();
+
+        // Attach the toggling of the query box visibility to a click
+        $("#togglequerybox").bind('click', function () {
+            var $link = $(this);
+            $link.siblings().slideToggle("fast");
+            if ($link.text() == PMA_messages.strHideQueryBox) {
+                $link.text(PMA_messages.strShowQueryBox);
+                // cheap trick to add a spacer between the menu tabs
+                // and "Show query box"; feel free to improve!
+                $('#togglequerybox_spacer').remove();
+                $link.before('<br id="togglequerybox_spacer" />');
+            } else {
+                $link.text(PMA_messages.strHideQueryBox);
+            }
+            // avoid default click action
+            return false;
+        });
+    }
+
+
+    /**
+     * Event handler for sqlqueryform.ajax button_submit_query
+     *
+     * @memberOf    jQuery
+     */
+    $("#button_submit_query").live('click', function (event) {
+        var $form = $(this).closest("form");
+        // the Go button related to query submission was clicked,
+        // instead of the one related to Bookmarks, so empty the
+        // id_bookmark selector to avoid misinterpretation in
+        // import.php about what needs to be done
+        $form.find("select[name=id_bookmark]").val("");
+        // let normal event propagation happen
+    });
+
+    /**
+     * Event handler for hitting enter on sqlqueryform bookmark_variable
+     * (the Variable textfield in Bookmarked SQL query section)
+     *
+     * @memberOf    jQuery
+     */
+    $("input[name=bookmark_variable]").bind("keypress", function (event) {
+        // force the 'Enter Key' to implicitly click the #button_submit_bookmark
+        var keycode = (event.keyCode ? event.keyCode : (event.which ? event.which : event.charCode));
+        if (keycode == 13) { // keycode for enter key
+            // When you press enter in the sqlqueryform, which
+            // has 2 submit buttons, the default is to run the
+            // #button_submit_query, because of the tabindex
+            // attribute.
+            // This submits #button_submit_bookmark instead,
+            // because when you are in the Bookmarked SQL query
+            // section and hit enter, you expect it to do the
+            // same action as the Go button in that section.
+            $("#button_submit_bookmark").click();
+            return false;
+        } else  {
+            return true;
+        }
+    });
+
+    /**
+     * Ajax Event handler for 'SQL Query Submit'
+     *
+     * @see         PMA_ajaxShowMessage()
+     * @memberOf    jQuery
+     * @name        sqlqueryform_submit
+     */
+    $("#sqlqueryform.ajax").live('submit', function (event) {
+        event.preventDefault();
+
+        var $form = $(this);
+        if (codemirror_editor) {
+            $form[0].elements['sql_query'].value = codemirror_editor.getValue();
+        }
+        if (! checkSqlQuery($form[0])) {
+            return false;
+        }
+
+        // remove any div containing a previous error message
+        $('div.error').remove();
+
+        var $msgbox = PMA_ajaxShowMessage();
+        var $sqlqueryresults = $('#sqlqueryresults');
+
+        PMA_prepareForAjaxRequest($form);
+
+        $.post($form.attr('action'), $form.serialize(), function (data) {
+            if (data.success === true) {
+                // success happens if the query returns rows or not
+                //
+                // fade out previous messages, if any
+                $('div.success, div.sqlquery_message').fadeOut();
+                if ($('#result_query').length) {
+                    $('#result_query').remove();
+                }
+
+                // show a message that stays on screen
+                if (typeof data.action_bookmark != 'undefined') {
+                    // view only
+                    if ('1' == data.action_bookmark) {
+                        $('#sqlquery').text(data.sql_query);
+                        // send to codemirror if possible
+                        setQuery(data.sql_query);
+                    }
+                    // delete
+                    if ('2' == data.action_bookmark) {
+                        $("#id_bookmark option[value='" + data.id_bookmark + "']").remove();
+                        // if there are no bookmarked queries now (only the empty option),
+                        // remove the bookmark section
+                        if ($('#id_bookmark option').length == 1) {
+                            $('#fieldsetBookmarkOptions').hide();
+                            $('#fieldsetBookmarkOptionsFooter').hide();
+                        }
+                    }
+                    $sqlqueryresults
+                     .show()
+                     .html(data.message);
+                } else if (typeof data.sql_query != 'undefined') {
+                    $('<div class="sqlquery_message"></div>')
+                     .html(data.sql_query)
+                     .insertBefore('#sqlqueryform');
+                    // unnecessary div that came from data.sql_query
+                    $('div.notice').remove();
+                } else {
+                    $sqlqueryresults
+                     .show()
+                     .html(data.message);
+                }
+                PMA_highlightSQL($('#result_query'));
+
+                if (typeof data.ajax_reload != 'undefined') {
+                    if (data.ajax_reload.reload) {
+                        if (data.ajax_reload.table_name) {
+                            PMA_commonParams.set('table', data.ajax_reload.table_name);
+                            PMA_commonActions.refreshMain();
+                        } else {
+                            PMA_reloadNavigation();
+                        }
+                    }
+                } else if (typeof data.reload != 'undefined') {
+                    // this happens if a USE or DROP command was typed
+                    PMA_commonActions.setDb(data.db);
+                    var url;
+                    if (data.db) {
+                        if (data.table) {
+                            url = 'table_sql.php';
+                        } else {
+                            url = 'db_sql.php';
+                        }
+                    } else {
+                        url = 'server_sql.php';
+                    }
+                    PMA_commonActions.refreshMain(url, function () {
+                        if ($('#result_query').length) {
+                            $('#result_query').remove();
+                        }
+                        if (data.sql_query) {
+                            $('<div id="result_query"></div>')
+                                .html(data.sql_query)
+                                .prependTo('#page_content');
+                            PMA_highlightSQL($('#page_content'));
+                        }
+                    });
+                }
+
+                $sqlqueryresults.show().trigger('makegrid');
+                $('#togglequerybox').show();
+                PMA_init_slider();
+
+                if (typeof data.action_bookmark == 'undefined') {
+                    if ($('#sqlqueryform input[name="retain_query_box"]').is(':checked') !== true) {
+                        if ($("#togglequerybox").siblings(":visible").length > 0) {
+                            $("#togglequerybox").trigger('click');
+                        }
+                    }
+                }
+            } else if (data.success === false) {
+                // show an error message that stays on screen
+                $('#sqlqueryform').before(data.error);
+                $sqlqueryresults.hide();
+            }
+            PMA_ajaxRemoveMessage($msgbox);
+        }); // end $.post()
+    }); // end SQL Query submit
+
+    /**
+     * Paginate results with Page Selector dropdown
+     * @memberOf    jQuery
+     * @name        paginate_dropdown_change
+     */
+    $("#pageselector").live('change', function (event) {
+        var $form = $(this).parent("form");
+        $form.submit();
+    }); // end Paginate results with Page Selector
+
+    /**
+     * Ajax Event handler for the display options
+     * @memberOf    jQuery
+     * @name        displayOptionsForm_submit
+     */
+    $("#displayOptionsForm.ajax").live('submit', function (event) {
+        event.preventDefault();
+
+        $form = $(this);
+
+        $.post($form.attr('action'), $form.serialize() + '&ajax_request=true', function (data) {
+            $("#sqlqueryresults")
+             .html(data.message)
+             .trigger('makegrid');
+            PMA_init_slider();
+        }); // end $.post()
+    }); //end displayOptionsForm handler
+}); // end $()
+
+
+/**
+ * Starting from some th, change the class of all td under it.
+ * If isAddClass is specified, it will be used to determine whether to add or remove the class.
+ */
+function PMA_changeClassForColumn($this_th, newclass, isAddClass)
+{
+    // index 0 is the th containing the big T
+    var th_index = $this_th.index();
+    var has_big_t = !$this_th.closest('tr').children(':first').hasClass('column_heading');
+    // .eq() is zero-based
+    if (has_big_t) {
+        th_index--;
+    }
+    var $tds = $this_th.closest('table').find('tbody tr').find('td.data:eq(' + th_index + ')');
+    if (isAddClass === undefined) {
+        $tds.toggleClass(newclass);
+    } else {
+        $tds.toggleClass(newclass, isAddClass);
+    }
+}
+
+AJAX.registerOnload('sql.js', function () {
+
+    $('a.browse_foreign').live('click', function (e) {
+        e.preventDefault();
+        window.open(this.href, 'foreigners', 'width=640,height=240,scrollbars=yes,resizable=yes');
+        $anchor = $(this);
+        $anchor.addClass('browse_foreign_clicked');
+    });
+
+    /**
+     * vertical column highlighting in horizontal mode when hovering over the column header
+     */
+    $('th.column_heading.pointer').live('hover', function (e) {
+        PMA_changeClassForColumn($(this), 'hover', e.type == 'mouseenter');
+    });
+
+    /**
+     * vertical column marking in horizontal mode when clicking the column header
+     */
+    $('th.column_heading.marker').live('click', function () {
+        PMA_changeClassForColumn($(this), 'marked');
+    });
+
+    /**
+     * create resizable table
+     */
+    $("#sqlqueryresults").trigger('makegrid');
+});
+
+/*
+ * Profiling Chart
+ */
+function makeProfilingChart()
+{
+    if ($('#profilingchart').length === 0 ||
+        $('#profilingchart').html().length !== 0 ||
+        !$.jqplot || !$.jqplot.Highlighter || !$.jqplot.PieRenderer
+    ) {
+        return;
+    }
+
+    var data = [];
+    $.each(jQuery.parseJSON($('#profilingChartData').html()), function (key, value) {
+        data.push([key, parseFloat(value)]);
+    });
+
+    // Remove chart and data divs contents
+    $('#profilingchart').html('').show();
+    $('#profilingChartData').html('');
+
+    PMA_createProfilingChartJqplot('profilingchart', data);
+}
+
+/*
+ * initialize profiling data tables
+ */
+function initProfilingTables()
+{
+    if (!$.tablesorter) {
+        return;
+    }
+
+    $('#profiletable').tablesorter({
+        widgets: ['zebra'],
+        sortList: [[0, 0]],
+        textExtraction: function (node) {
+            if (node.children.length > 0) {
+                return node.children[0].innerHTML;
+            } else {
+                return node.innerHTML;
+            }
+        }
+    });
+
+    $('#profilesummarytable').tablesorter({
+        widgets: ['zebra'],
+        sortList: [[1, 1]],
+        textExtraction: function (node) {
+            if (node.children.length > 0) {
+                return node.children[0].innerHTML;
+            } else {
+                return node.innerHTML;
+            }
+        }
+    });
+}
+
+AJAX.registerOnload('sql.js', function () {
+    makeProfilingChart();
+    initProfilingTables();
+});

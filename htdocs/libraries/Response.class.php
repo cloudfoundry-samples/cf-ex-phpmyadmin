@@ -92,8 +92,6 @@ class PMA_Response
 
     /**
      * Creates a new class instance
-     *
-     * @return new PMA_Response object
      */
     private function __construct()
     {
@@ -186,7 +184,7 @@ class PMA_Response
     /**
      * Returns a PMA_Header object
      *
-     * @return object
+     * @return PMA_Header
      */
     public function getHeader()
     {
@@ -196,7 +194,7 @@ class PMA_Response
     /**
      * Returns a PMA_Footer object
      *
-     * @return object
+     * @return PMA_Footer
      */
     public function getFooter()
     {
@@ -213,7 +211,11 @@ class PMA_Response
      */
     public function addHTML($content)
     {
-        if ($content instanceof PMA_Message) {
+        if (is_array($content)) {
+            foreach ($content as $msg) {
+                $this->addHTML($msg);
+            }
+        } elseif ($content instanceof PMA_Message) {
             $this->_HTML .= $content->getDisplay();
         } else {
             $this->_HTML .= $content;
@@ -317,8 +319,9 @@ class PMA_Response
             if (empty($GLOBALS['error_message'])) {
                 // set current db, table and sql query in the querywindow
                 $query = '';
+                $maxChars = $GLOBALS['cfg']['MaxCharactersInDisplayedSQL'];
                 if (isset($GLOBALS['sql_query'])
-                    && strlen($GLOBALS['sql_query']) < $GLOBALS['cfg']['MaxCharactersInDisplayedSQL']
+                    && strlen($GLOBALS['sql_query']) < $maxChars
                 ) {
                     $query = PMA_escapeJsString($GLOBALS['sql_query']);
                 }

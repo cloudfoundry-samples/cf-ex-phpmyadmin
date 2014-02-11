@@ -12,20 +12,6 @@
 require_once 'libraries/common.inc.php';
 require_once 'libraries/pmd_common.php';
 
-/**
- * Sets globals from $_GET
- */
-$get_params = array(
-    'db',
-    'table',
-    'token'
-);
-foreach ($get_params as $one_get_param) {
-    if (isset($_GET[$one_get_param])) {
-        $GLOBALS[$one_get_param] = $_GET[$one_get_param];
-    }
-}
-
 $script_display_field = get_tables_info();
 $tab_column       = get_columns_info();
 $script_tables    = get_script_tabs();
@@ -35,8 +21,8 @@ $tables_pk_or_unique_keys = get_pk_or_unique_keys();
 $tables_all_keys  = get_all_keys();
 
 $params = array('lang' => $GLOBALS['lang']);
-if (isset($GLOBALS['db'])) {
-    $params['db'] = $GLOBALS['db'];
+if (isset($_GET['db'])) {
+    $params['db'] = $_GET['db'];
 }
 
 $response = PMA_Response::getInstance();
@@ -44,12 +30,12 @@ $response->getFooter()->setMinimal();
 $header   = $response->getHeader();
 $header->setBodyId('pmd_body');
 $scripts = $header->getScripts();
+$scripts->addFile('jquery/jquery.fullscreen.js');
 $scripts->addFile('pmd/ajax.js');
 $scripts->addFile('pmd/history.js');
 $scripts->addFile('pmd/move.js');
 $scripts->addFile('pmd/iecanvas.js', true);
 $scripts->addFile('pmd/init.js');
-$scripts->addFile('jquery/jquery.fullscreen.js');
 
 require 'libraries/db_common.inc.php';
 require 'libraries/db_info.inc.php';
@@ -60,10 +46,10 @@ echo '<div id="script_server" class="hide">';
 echo htmlspecialchars($GLOBALS['server']);
 echo '</div>';
 echo '<div id="script_db" class="hide">';
-echo htmlspecialchars($GLOBALS['db']);
+echo htmlspecialchars($_GET['db']);
 echo '</div>';
 echo '<div id="script_token" class="hide">';
-echo htmlspecialchars($GLOBALS['token']);
+echo htmlspecialchars($_GET['token']);
 echo '</div>';
 echo '<div id="script_tables" class="hide">';
 echo htmlspecialchars(json_encode($script_tables));
@@ -215,7 +201,7 @@ echo '</table>';
 echo '</div>';
 
 echo '<div class="center">';
-echo __('Number of tables') . ': ' . $name_cnt;
+echo __('Number of tables:') . ' ' . $name_cnt;
 echo '</div>';
 echo '<div class="floatright">';
 echo '<div id="layer_menu_sizer" onmousedown="layer_menu_cur_click=1">';
@@ -295,7 +281,7 @@ for ($i = 0; $i < count($GLOBALS['PMD']["TABLE_NAME"]); $i++) {
         echo 'style="display: none;"';
     }
     echo '>';
-    $display_field = PMA_getDisplayField($db, $GLOBALS['PMD']["TABLE_NAME_SMALL"][$i]);
+    $display_field = PMA_getDisplayField($_GET['db'], $GLOBALS['PMD']["TABLE_NAME_SMALL"][$i]);
     for ($j = 0, $id_cnt = count($tab_column[$t_n]["COLUMN_ID"]); $j < $id_cnt; $j++) {
         ?>
 <tr id="id_tr_<?php
@@ -861,10 +847,12 @@ if (! empty($_REQUEST['query'])) {
     echo '<div id="box">';
     echo '<span id="boxtitle"></span>';
     echo '<form method="post" action="db_qbe.php">';
-    echo '<textarea cols="80" name="sql_query" id="textSqlquery" rows="15"></textarea><div id="tblfooter">';
+    echo '<textarea cols="80" name="sql_query" id="textSqlquery"'
+        . ' rows="15"></textarea><div id="tblfooter">';
     echo '  <input type="submit" name="submit_sql" class="btn" />';
-    echo '  <input type="button" name="cancel" value="' . __('Cancel') . '" onclick="closebox()" class="btn" />';
-    echo PMA_generate_common_hidden_inputs($GLOBALS['db']);
+    echo '  <input type="button" name="cancel" value="'
+        . __('Cancel') . '" onclick="closebox()" class="btn" />';
+    echo PMA_URL_getHiddenInputs($_GET['db']);
     echo '</div></p>';
     echo '</form></div>';
 
@@ -872,8 +860,18 @@ if (! empty($_REQUEST['query'])) {
 
 
 <!-- cache images -->
-<img src="<?php echo $_SESSION['PMA_Theme']->getImgPath('pmd/2leftarrow_m.png'); ?>" width="0" height="0" alt="" />
-<img src="<?php echo $_SESSION['PMA_Theme']->getImgPath('pmd/rightarrow1.png'); ?>" width="0" height="0" alt="" />
-<img src="<?php echo $_SESSION['PMA_Theme']->getImgPath('pmd/rightarrow2.png'); ?>" width="0" height="0" alt="" />
-<img src="<?php echo $_SESSION['PMA_Theme']->getImgPath('pmd/uparrow2_m.png'); ?>" width="0" height="0" alt="" />
-<div id="PMA_disable_floating_menubar"></div>
+<?php
+echo '<img src="'
+    . $_SESSION['PMA_Theme']->getImgPath('pmd/2leftarrow_m.png')
+    . '" width="0" height="0" alt="" />'
+    . '<img src="'
+    . $_SESSION['PMA_Theme']->getImgPath('pmd/rightarrow1.png')
+    . '" width="0" height="0" alt="" />'
+    . '<img src="'
+    . $_SESSION['PMA_Theme']->getImgPath('pmd/rightarrow2.png')
+    . '" width="0" height="0" alt="" />'
+    . '<img src="'
+    . $_SESSION['PMA_Theme']->getImgPath('pmd/uparrow2_m.png')
+    . '" width="0" height="0" alt="" />'
+    . '<div id="PMA_disable_floating_menubar"></div>';
+?>

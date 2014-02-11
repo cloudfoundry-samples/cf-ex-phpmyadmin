@@ -44,7 +44,7 @@ function PMA_TRI_main()
     /**
      * Display a list of available triggers
      */
-    $items = PMA_DBI_get_triggers($db, $table);
+    $items = $GLOBALS['dbi']->getTriggers($db, $table);
     echo PMA_RTE_getList('trigger', $items);
     /**
      * Display a link for adding a new trigger,
@@ -76,26 +76,26 @@ function PMA_TRI_handleEditor()
                 $trigger = PMA_TRI_getDataFromName($_REQUEST['item_original_name']);
                 $create_item = $trigger['create'];
                 $drop_item = $trigger['drop'] . ';';
-                $result = PMA_DBI_try_query($drop_item);
+                $result = $GLOBALS['dbi']->tryQuery($drop_item);
                 if (! $result) {
                     $errors[] = sprintf(
                         __('The following query has failed: "%s"'),
                         htmlspecialchars($drop_item)
                     )
                     . '<br />'
-                    . __('MySQL said: ') . PMA_DBI_getError(null);
+                    . __('MySQL said: ') . $GLOBALS['dbi']->getError(null);
                 } else {
-                    $result = PMA_DBI_try_query($item_query);
+                    $result = $GLOBALS['dbi']->tryQuery($item_query);
                     if (! $result) {
                         $errors[] = sprintf(
                             __('The following query has failed: "%s"'),
                             htmlspecialchars($item_query)
                         )
                         . '<br />'
-                        . __('MySQL said: ') . PMA_DBI_getError(null);
-                        // We dropped the old item, but were unable to create the new one
-                        // Try to restore the backup query
-                        $result = PMA_DBI_try_query($create_item);
+                        . __('MySQL said: ') . $GLOBALS['dbi']->getError(null);
+                        // We dropped the old item, but were unable to create the
+                        // new one. Try to restore the backup query.
+                        $result = $GLOBALS['dbi']->tryQuery($create_item);
                         if (! $result) {
                             // OMG, this is really bad! We dropped the query,
                             // failed to create a new one
@@ -109,7 +109,7 @@ function PMA_TRI_handleEditor()
                             . __('The backed up query was:')
                             . "\"" . htmlspecialchars($create_item) . "\""
                             . '<br />'
-                            . __('MySQL said: ') . PMA_DBI_getError(null);
+                            . __('MySQL said: ') . $GLOBALS['dbi']->getError(null);
                         }
                     } else {
                         $message = PMA_Message::success(
@@ -123,14 +123,14 @@ function PMA_TRI_handleEditor()
                 }
             } else {
                 // 'Add a new item' mode
-                $result = PMA_DBI_try_query($item_query);
+                $result = $GLOBALS['dbi']->tryQuery($item_query);
                 if (! $result) {
                     $errors[] = sprintf(
                         __('The following query has failed: "%s"'),
                         htmlspecialchars($item_query)
                     )
                     . '<br /><br />'
-                    . __('MySQL said: ') . PMA_DBI_getError(null);
+                    . __('MySQL said: ') . $GLOBALS['dbi']->getError(null);
                 } else {
                     $message = PMA_Message::success(
                         __('Trigger %1$s has been created.')
@@ -144,7 +144,7 @@ function PMA_TRI_handleEditor()
         }
 
         if (count($errors)) {
-            $message = PMA_Message::error(__('<b>One or more errors have occured while processing your request:</b>'));
+            $message = PMA_Message::error(__('<b>One or more errors have occurred while processing your request:</b>'));
             $message->addString('<ul>');
             foreach ($errors as $string) {
                 $message->addString('<li>' . $string . '</li>');
@@ -156,7 +156,7 @@ function PMA_TRI_handleEditor()
         if ($GLOBALS['is_ajax_request']) {
             $response = PMA_Response::getInstance();
             if ($message->isSuccess()) {
-                $items = PMA_DBI_get_triggers($db, $table, '');
+                $items = $GLOBALS['dbi']->getTriggers($db, $table, '');
                 $trigger = false;
                 foreach ($items as $value) {
                     if ($value['name'] == $_REQUEST['item_name']) {
@@ -227,7 +227,7 @@ function PMA_TRI_handleEditor()
             }
             exit;
         } else {
-            $message  = __('Error in processing request') . ' : ';
+            $message  = __('Error in processing request:') . ' ';
             $message .= sprintf(
                 PMA_RTE_getWord('not_found'),
                 htmlspecialchars(PMA_Util::backquote($_REQUEST['item_name'])),
@@ -280,7 +280,7 @@ function PMA_TRI_getDataFromName($name)
     global $db, $table, $_REQUEST;
 
     $temp = array();
-    $items = PMA_DBI_get_triggers($db, $table, '');
+    $items = $GLOBALS['dbi']->getTriggers($db, $table, '');
     foreach ($items as $value) {
         if ($value['name'] == $name) {
             $temp = $value;
@@ -334,7 +334,7 @@ function PMA_TRI_getEditorForm($mode, $item)
     $query  = "SELECT `TABLE_NAME` FROM `INFORMATION_SCHEMA`.`TABLES` ";
     $query .= "WHERE `TABLE_SCHEMA`='" . PMA_Util::sqlAddSlashes($db) . "' ";
     $query .= "AND `TABLE_TYPE`='BASE TABLE'";
-    $tables = PMA_DBI_fetch_result($query);
+    $tables = $GLOBALS['dbi']->fetchResult($query);
 
     // Create the output
     $retval  = "";
@@ -342,7 +342,7 @@ function PMA_TRI_getEditorForm($mode, $item)
     $retval .= "<form class='rte_form' action='db_triggers.php' method='post'>\n";
     $retval .= "<input name='{$mode}_item' type='hidden' value='1' />\n";
     $retval .= $original_data;
-    $retval .= PMA_generate_common_hidden_inputs($db, $table) . "\n";
+    $retval .= PMA_URL_getHiddenInputs($db, $table) . "\n";
     $retval .= "<fieldset>\n";
     $retval .= "<legend>" . __('Details') . "</legend>\n";
     $retval .= "<table class='rte_table' style='width: 100%'>\n";
@@ -467,7 +467,7 @@ function PMA_TRI_getQueryFromRequest()
     }
     $query .= 'ON ';
     if (! empty($_REQUEST['item_table'])
-        && in_array($_REQUEST['item_table'], PMA_DBI_get_tables($db))
+        && in_array($_REQUEST['item_table'], $GLOBALS['dbi']->getTables($db))
     ) {
         $query .= PMA_Util::backquote($_REQUEST['item_table']);
     } else {

@@ -53,7 +53,7 @@ if ($cfg['SQLValidator']['use'] == true) {
  *
  * @return string Validator result string
  *
- * @global array The PMA configuration array
+ * @global array $cfg The PMA configuration array
  */
 function PMA_validateSQL($sql)
 {
@@ -67,7 +67,8 @@ function PMA_validateSQL($sql)
         ) {
             $str = sprintf(
                 __('The SQL validator could not be initialized. Please check if you have installed the necessary PHP extensions as described in the %sdocumentation%s.'),
-                '<a href="' . PMA_Util::getDocuLink('faq', 'faqsqlvalidator') .  '" target="documentation">',
+                '<a href="' . PMA_Util::getDocuLink('faq', 'faqsqlvalidator')
+                .  '" target="documentation">',
                 '</a>'
             );
         } else {

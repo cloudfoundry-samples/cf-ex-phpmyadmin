@@ -77,7 +77,7 @@ class PMA_File
     /**
      * constructor
      *
-     * @param string $name file name
+     * @param boolean|string $name file name or false
      *
      * @access public
      */
@@ -100,7 +100,7 @@ class PMA_File
     }
 
     /**
-     * deletes file if it is temporary, usally from a moved upload file
+     * deletes file if it is temporary, usually from a moved upload file
      *
      * @access  public
      * @return boolean success
@@ -247,7 +247,7 @@ class PMA_File
      * Loads uploaded file from table change request.
      *
      * @param string $key       the md5 hash of the column name
-     * @param string $rownumber
+     * @param string $rownumber number of row to process
      *
      * @return boolean success
      * @access  public
@@ -320,15 +320,16 @@ class PMA_File
      * </code>
      *
      * @param array  $file      the array
-     * @param string $rownumber
-     * @param string $key
+     * @param string $rownumber number of row to process
+     * @param string $key       key to process
      *
      * @return array
      * @access  public
      * @static
      */
-    public function fetchUploadedFromTblChangeRequestMultiple($file, $rownumber, $key)
-    {
+    public function fetchUploadedFromTblChangeRequestMultiple(
+        $file, $rownumber, $key
+    ) {
         $new_file = array(
             'name' => $file['name']['multi_edit'][$rownumber][$key],
             'type' => $file['type']['multi_edit'][$rownumber][$key],
@@ -344,7 +345,7 @@ class PMA_File
      * sets the name if the file to the one selected in the tbl_change form
      *
      * @param string $key       the md5 hash of the column name
-     * @param string $rownumber
+     * @param string $rownumber number of row to process
      *
      * @return boolean success
      * @access  public
@@ -378,7 +379,7 @@ class PMA_File
      * Checks whether there was any error.
      *
      * @access  public
-     * @return boolean whether an error occured or not
+     * @return boolean whether an error occurred or not
      */
     public function isError()
     {
@@ -390,7 +391,7 @@ class PMA_File
      * and uses the submitted/selected file
      *
      * @param string $key       the md5 hash of the column name
-     * @param string $rownumber
+     * @param string $rownumber number of row to process
      *
      * @return boolean success
      * @access  public
@@ -531,7 +532,7 @@ class PMA_File
          * get registered plugins for file compression
 
         foreach (PMA_getPlugins($type = 'compression') as $plugin) {
-            if (call_user_func_array(array($plugin['classname'], 'canHandle'), array($this->getName()))) {
+            if ($plugin['classname']::canHandle($this->getName())) {
                 $this->setCompressionPlugin($plugin);
                 break;
             }
@@ -570,7 +571,7 @@ class PMA_File
     /**
      * Returns the file handle
      *
-     * @return object file handle
+     * @return resource file handle
      */
     public function getHandle()
     {
@@ -775,7 +776,7 @@ class PMA_File
         }
 
         if ($GLOBALS['charset_conversion']) {
-            $result = PMA_convert_string($this->getCharset(), 'utf-8', $result);
+            $result = PMA_convertString($this->getCharset(), 'utf-8', $result);
         } else {
             /**
              * Skip possible byte order marks (I do not think we need more
@@ -790,7 +791,8 @@ class PMA_File
                     $result = substr($result, 3);
                     // UTF-16 BE, LE
                 } elseif (strncmp($result, "\xFE\xFF", 2) == 0
-                 || strncmp($result, "\xFF\xFE", 2) == 0) {
+                    || strncmp($result, "\xFF\xFE", 2) == 0
+                ) {
                     $result = substr($result, 2);
                 }
             }

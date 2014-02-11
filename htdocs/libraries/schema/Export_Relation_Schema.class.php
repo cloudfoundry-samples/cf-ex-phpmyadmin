@@ -12,6 +12,8 @@ if (! defined('PHPMYADMIN')) {
  * This class is inherited by all schema classes
  * It contains those methods which are common in them
  * it works like factory pattern
+ *
+ * @package PhpMyAdmin
  */
 class PMA_Export_Relation_Schema
 {
@@ -199,11 +201,15 @@ class PMA_Export_Relation_Schema
             . ' WHERE db_name = \'' . PMA_Util::sqlAddSlashes($db) . '\''
             . ' AND pdf_page_number = ' . $pageNumber;
 
-        $tab_rs = PMA_queryAsControlUser($tab_sql, null, PMA_DBI_QUERY_STORE);
-        if (!$tab_rs || !PMA_DBI_num_rows($tab_rs) > 0) {
+        $tab_rs = PMA_queryAsControlUser(
+            $tab_sql, null, PMA_DatabaseInterface::QUERY_STORE
+        );
+        if (! $tab_rs || ! $GLOBALS['dbi']->numRows($tab_rs) > 0) {
             $this->dieSchema('', __('This page does not contain any tables!'));
         }
-        while ($curr_table = @PMA_DBI_fetch_assoc($tab_rs)) {
+        //Fix undefined error
+        $alltables = array();
+        while ($curr_table = @$GLOBALS['dbi']->fetchAssoc($tab_rs)) {
             $alltables[] = PMA_Util::sqlAddSlashes($curr_table['table_name']);
         }
         return $alltables;
@@ -216,8 +222,8 @@ class PMA_Export_Relation_Schema
      * @param string  $type          Schema Type
      * @param string  $error_message The error mesage
      *
-     * @global array    the PMA configuration array
-     * @global string   the current database name
+     * @global array      the PMA configuration array
+     * @global string $db the current database name
      *
      * @access public
      *
@@ -234,8 +240,9 @@ class PMA_Export_Relation_Schema
         echo '<p>' . "\n";
         echo '    ' . $error_message . "\n";
         echo '</p>' . "\n";
-        echo '<a href="schema_edit.php?' . PMA_generate_common_url($db)
-            . '&do=selectpage&chpage=' . $pageNumber . '&action_choose=0'
+        echo '<a href="schema_edit.php?' . PMA_URL_getCommon($db)
+            . '&do=selectpage&chpage=' . htmlspecialchars($pageNumber)
+            . '&action_choose=0'
             . '">' . __('Back') . '</a>';
         echo "\n";
         exit;

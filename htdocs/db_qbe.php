@@ -11,6 +11,9 @@
  */
 require_once 'libraries/common.inc.php';
 require_once 'libraries/DBQbe.class.php';
+require_once 'libraries/bookmark.lib.php';
+require_once 'libraries/sql.lib.php';
+
 $response = PMA_Response::getInstance();
 
 // Gets the relation settings
@@ -25,8 +28,15 @@ if (isset($_REQUEST['submit_sql']) && ! empty($sql_query)) {
         $message_to_display = true;
     } else {
         $goto      = 'db_sql.php';
-        include 'sql.php';
-        exit;
+
+        // Parse and analyze the query
+        include_once 'libraries/parse_analyze.inc.php';
+
+        PMA_executeQueryAndSendQueryResponse(
+            $analyzed_sql_results, false, $_REQUEST['db'], null, null, null, null,
+            false, null, null, null, null, $goto, $pmaThemeImage, null, null, null,
+            $sql_query, null, null
+        );
     }
 }
 
@@ -48,7 +58,7 @@ $db_qbe = new PMA_DBQbe($GLOBALS['db']);
  * Displays the Query by example form
  */
 if ($cfgRelation['designerwork']) {
-    $url = 'pmd_general.php' . PMA_generate_common_url(
+    $url = 'pmd_general.php' . PMA_URL_getCommon(
         array_merge(
             $url_params,
             array('query' => 1)

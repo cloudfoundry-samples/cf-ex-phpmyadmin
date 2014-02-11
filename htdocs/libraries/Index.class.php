@@ -10,6 +10,7 @@ if (! defined('PHPMYADMIN')) {
 }
 
 /**
+ * Index manipulation class
  *
  * @package PhpMyAdmin
  * @since   phpMyAdmin 3.0.0
@@ -103,7 +104,7 @@ class PMA_Index
      * @param string $table      table name
      * @param string $index_name index name
      *
-     * @return object corresponding Index object
+     * @return PMA_Index corresponding Index object
      */
     static public function singleton($schema, $table, $index_name = '')
     {
@@ -172,14 +173,15 @@ class PMA_Index
             return true;
         }
 
-        $_raw_indexes = PMA_DBI_get_table_indexes($schema, $table);
+        $_raw_indexes = $GLOBALS['dbi']->getTableIndexes($schema, $table);
         foreach ($_raw_indexes as $_each_index) {
             $_each_index['Schema'] = $schema;
-            if (! isset(PMA_Index::$_registry[$schema][$table][$_each_index['Key_name']])) {
+            $keyName = $_each_index['Key_name'];
+            if (! isset(PMA_Index::$_registry[$schema][$table][$keyName])) {
                 $key = new PMA_Index($_each_index);
-                PMA_Index::$_registry[$schema][$table][$_each_index['Key_name']] = $key;
+                PMA_Index::$_registry[$schema][$table][$keyName] = $key;
             } else {
-                $key = PMA_Index::$_registry[$schema][$table][$_each_index['Key_name']];
+                $key = PMA_Index::$_registry[$schema][$table][$keyName];
             }
 
             $key->addColumn($_each_index);
@@ -358,7 +360,7 @@ class PMA_Index
     /**
      * Returns index choice (PRIMARY, UNIQUE, INDEX, SPATIAL, FULLTEXT)
      *
-     * @return index choice
+     * @return string index choice
      */
     public function getChoice()
     {
@@ -399,7 +401,9 @@ class PMA_Index
                 continue;
             }
             $html_options .= '<option value="' . $each_index_choice . '"'
-                 . (($this->_choice == $each_index_choice) ? ' selected="selected"' : '')
+                 . (($this->_choice == $each_index_choice)
+                 ? ' selected="selected"'
+                 : '')
                  . '>'. $each_index_choice . '</option>' . "\n";
         }
 
@@ -534,9 +538,7 @@ class PMA_Index
         if (! $print_mode) {
             $r  = '<fieldset class="index_info">';
             $r .= '<legend id="index_header">' . __('Indexes');
-            $r .= PMA_Util::showMySQLDocu(
-                'optimization', 'optimizing-database-structure'
-            );
+            $r .= PMA_Util::showMySQLDocu('optimizing-database-structure');
 
             $r .= '</legend>';
             $r .= $no_indexes;
@@ -587,7 +589,7 @@ class PMA_Index
                 $r .= '" ' . $row_span . '>'
                    . '    <a class="';
                 $r .= 'ajax';
-                $r .= '" href="tbl_indexes.php' . PMA_generate_common_url($this_params)
+                $r .= '" href="tbl_indexes.php' . PMA_URL_getCommon($this_params)
                    . '">' . PMA_Util::getIcon('b_edit.png', __('Edit')) . '</a>'
                    . '</td>' . "\n";
                 $this_params = $GLOBALS['url_params'];
@@ -605,7 +607,7 @@ class PMA_Index
                         . PMA_Util::backquote($table) . ' DROP INDEX '
                         . PMA_Util::backquote($index->getName()) . ';';
                     $this_params['message_to_show'] = sprintf(
-                        __('Index %s has been dropped'), $index->getName()
+                        __('Index %s has been dropped.'), $index->getName()
                     );
 
                     $js_msg = PMA_jsFormat(
@@ -620,7 +622,7 @@ class PMA_Index
                     . ' value="' . $js_msg . '" />';
                 $r .= '    <a class="drop_primary_key_index_anchor';
                 $r .= ' ajax';
-                $r .= '" href="sql.php' . PMA_generate_common_url($this_params)
+                $r .= '" href="sql.php' . PMA_URL_getCommon($this_params)
                    . '" >'
                    . PMA_Util::getIcon('b_drop.png', __('Drop'))  . '</a>'
                    . '</td>' . "\n";
@@ -661,7 +663,8 @@ class PMA_Index
                     . '</td>';
 
                 if (PMA_MYSQL_INT_VERSION > 50500
-                    && $column->getSeqInIndex() == 1) {
+                    && $column->getSeqInIndex() == 1
+                ) {
                     $r .= '<td ' . $row_span . '>'
                         . htmlspecialchars($index->getComments()) . '</td>';
                 }
@@ -679,6 +682,11 @@ class PMA_Index
         return $r;
     }
 
+    /**
+     * Gets the properties in an array for comparison purposes
+     *
+     * @return array an array containing the properties of the index
+     */
     public function getCompareData()
     {
         $data = array(
@@ -743,6 +751,8 @@ class PMA_Index
 }
 
 /**
+ * Index column wrapper
+ *
  * @package PhpMyAdmin
  */
 class PMA_Index_Column
@@ -790,11 +800,23 @@ class PMA_Index_Column
      */
     private $_cardinality = null;
 
+    /**
+     * Constructor
+     *
+     * @param array $params an array containing the parameters of the index column
+     */
     public function __construct($params = array())
     {
         $this->set($params);
     }
 
+    /**
+     * Sets parameters of the index column
+     *
+     * @param array $params an array containing the parameters of the index column
+     *
+     * @return void
+     */
     public function set($params)
     {
         if (isset($params['Column_name'])) {
@@ -817,21 +839,44 @@ class PMA_Index_Column
         }
     }
 
+    /**
+     * Returns the column name
+     *
+     * @return string column name
+     */
     public function getName()
     {
         return $this->_name;
     }
 
+    /**
+     * Return the column collation
+     *
+     * @return string column collation
+     */
     public function getCollation()
     {
         return $this->_collation;
     }
 
+    /**
+     * Returns the cardinality of the column
+     *
+     * @return int cardinality of the column
+     */
     public function getCardinality()
     {
         return $this->_cardinality;
     }
 
+    /**
+     * Returns whether the column is nullable
+     *
+     * @param boolean $as_text whether to returned the string representation
+     *
+     * @return mixed nullability of the column. True/false or Yes/No depending
+     *               on the value of the $as_text parameter
+     */
     public function getNull($as_text = false)
     {
         return $as_text
@@ -839,16 +884,32 @@ class PMA_Index_Column
             : $this->_null;
     }
 
+    /**
+     * Returns the sequence number of the column in the index
+     *
+     * @return int sequence number of the column in the index
+     */
     public function getSeqInIndex()
     {
         return $this->_seq_in_index;
     }
 
+    /**
+     * Returns the number of indexed characters if the column is only
+     * partly indexed
+     *
+     * @return int the number of indexed characters
+     */
     public function getSubPart()
     {
         return $this->_sub_part;
     }
 
+    /**
+     * Gets the properties in an array for comparison purposes
+     *
+     * @return array an array containing the properties of the index column
+     */
     public function getCompareData()
     {
         return array(
