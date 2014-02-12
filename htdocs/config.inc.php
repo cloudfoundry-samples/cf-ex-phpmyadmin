@@ -46,6 +46,11 @@ $cfg['Servers'][$i]['AllowNoPassword'] = false;
  * phpMyAdmin configuration storage settings.
  */
 
+/*
+ * Read application configuration, get uri
+ */
+$appCfg = json_decode($_ENV['VCAP_APPLICATION'], true);
+$cfg['PmaAbsoluteUri'] = 'http://' . $appCfg['uris'][0] . "/";
 $cfg['LoginCookieValidity'] = 1800;
 
 /* User used to manipulate with storage */
