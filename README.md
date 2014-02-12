@@ -12,7 +12,7 @@ Clone the app and push it to CloudFoundry.
 
 ```
 git clone https://github.com/dmikusa-pivotal/cf-ex-phpmyadmin
-cd cf-ex-php-info 
+cd cf-ex-phpmyadmin
 cf push
 ```
 
