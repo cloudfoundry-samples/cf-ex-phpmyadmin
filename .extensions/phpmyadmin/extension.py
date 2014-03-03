@@ -5,7 +5,6 @@ Downloads, installs and configures PHPMyAdmin
 import os
 import os.path
 import logging
-from build_pack_utils import Downloader
 from build_pack_utils import utils
 
 
@@ -20,6 +19,7 @@ DEFAULTS = utils.FormattedDict({
                       '/download#',
     'PHPMYADMIN_HASH': 'a2d00654347bcba2731e24f0358df069e57fc12b'
 })
+
 
 # Extension Methods
 def preprocess_commands(ctx):
@@ -43,18 +43,17 @@ def compile(install):
         DEFAULTS['PHPMYADMIN_URL'],
         DEFAULTS['PHPMYADMIN_HASH'],
         workDir, strip=True)
-    (install.builder.
+    (install.builder
         .move()
         .everything()
         .under('{BUILD_DIR}/htdocs')
         .into(workDir)
         .done())
-    (install.builder.
+    (install.builder
         .move()
         .everything()
         .under(workDir)
         .info('{BUILD_DIR}/htdocs')
         .done())
-    os.rmdir(workDir) # make sure we moved everything
+    os.rmdir(workDir)  # make sure we moved everything
     return 0
-
