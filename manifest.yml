@@ -1,0 +1,11 @@
+---
+applications:
+- name: phpmyadmin
+  memory: 256M 
+  instances: 1
+  host: phpmyadmin
+  domain: cfapps.io
+  path: .
+  buildpack: https://github.com/dmikusa-pivotal/cf-php-build-pack.git
+  services:
+  - mysql-db
