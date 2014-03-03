@@ -7,5 +7,7 @@ applications:
   domain: cfapps.io
   path: .
   buildpack: https://github.com/dmikusa-pivotal/cf-php-build-pack.git
+  env:
+    BP_DEBUG: true
   services:
   - mysql-db
