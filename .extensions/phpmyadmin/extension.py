@@ -55,7 +55,7 @@ def compile(install):
         .move()
         .everything()
         .under(workDir)
+        .where_name_does_not_match('^%s/setup/.*$' % workDir)
         .into('{BUILD_DIR}/htdocs')
         .done())
-    os.rmdir(workDir)  # make sure we moved everything
     return 0
