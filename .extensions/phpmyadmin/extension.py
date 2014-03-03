@@ -13,11 +13,11 @@ _log = logging.getLogger('phpmyadmin')
 
 DEFAULTS = utils.FormattedDict({
     'PHPMYADMIN_VERSION': '4.1.8',
+    'PHPMYADMIN_PACKAGE': 'phpMyAdmin-{PHPMYADMIN_VERSION}-english.tar.gz',
+    'PHPMYADMIN_HASH': 'a2d00654347bcba2731e24f0358df069e57fc12b',
     'PHPMYADMIN_URL': 'http://sourceforge.net/projects/phpmyadmin/'
                       'files/phpMyAdmin/{PHPMYADMIN_VERSION}/'
-                      'phpMyAdmin-{PHPMYADMIN_VERSION}-english.tar.gz'
-                      '/download#',
-    'PHPMYADMIN_HASH': 'a2d00654347bcba2731e24f0358df069e57fc12b'
+                      '{PHPMYADMIN_PACKAGE}/download#'
 })
 
 
@@ -42,7 +42,9 @@ def compile(install):
     inst.install_binary_direct(
         DEFAULTS['PHPMYADMIN_URL'],
         DEFAULTS['PHPMYADMIN_HASH'],
-        workDir, strip=True)
+        workDir,
+        fileName=DEFAULTS['PHPMYADMIN_PACKAGE'],
+        strip=True)
     (install.builder
         .move()
         .everything()
@@ -53,7 +55,7 @@ def compile(install):
         .move()
         .everything()
         .under(workDir)
-        .info('{BUILD_DIR}/htdocs')
+        .into('{BUILD_DIR}/htdocs')
         .done())
     os.rmdir(workDir)  # make sure we moved everything
     return 0
