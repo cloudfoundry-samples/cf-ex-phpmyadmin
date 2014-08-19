@@ -53,7 +53,7 @@ $appCfg = json_decode($_ENV['VCAP_APPLICATION'], true);
 $scheme = ($_SERVER['HTTPS'] != '') ? 'https' : 'http';
 $cfg['PmaAbsoluteUri'] = $scheme . '://' . $appCfg['uris'][0] . "/";
 
-$cfg['LoginCookieValidity'] = 1800;
+$cfg['LoginCookieValidity'] = 1440;
 
 /* User used to manipulate with storage */
 // $cfg['Servers'][$i]['controlhost'] = '';
