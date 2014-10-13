@@ -25,22 +25,34 @@ $i = 0;
  * Read MySQL service properties from _ENV['VCAP_SERVICES']
  */
 $services = json_decode($_ENV['VCAP_SERVICES'], true);
-$service = $services['cleardb'][0]; // pick the first service
+$mysql_services = array();
+foreach($services as $service_name => $service_list) {
+  if ($service_name === 'cleardb' || strpos($service_name, 'mysql') === 0) {
+    foreach($service_list as $mysql_service) {
+      $mysql_services[] = $mysql_service;
+    }
+  }
+}
+
+
 
 /*
- * First server
+ * Servers configuration
  */
-$i++;
-/* Authentication type */
-$cfg['Servers'][$i]['auth_type'] = 'cookie';
-/* Server parameters */
-$cfg['Servers'][$i]['host'] = $service['credentials']['hostname'];
-$cfg['Servers'][$i]['port'] = $service['credentials']['port'];
-$cfg['Servers'][$i]['connect_type'] = 'tcp';
-$cfg['Servers'][$i]['compress'] = false;
-/* Select mysql if your server does not have mysqli */
-$cfg['Servers'][$i]['extension'] = 'mysqli';
-$cfg['Servers'][$i]['AllowNoPassword'] = false;
+for($i = 1; $i <= count($mysql_services); $i++) {
+    $db = $mysql_services[$i-1]->credentials;
+    /* Display name */
+    $cfg['Servers'][$i]['verbose'] = $mysql_services[$i-1]->name;
+    /* Authentication type */
+    $cfg['Servers'][$i]['auth_type'] = 'cookie';
+    /* Server parameters */
+    $cfg['Servers'][$i]['host'] = $db->hostname;
+    $cfg['Servers'][$i]['port'] = $db->port;
+    $cfg['Servers'][$i]['connect_type'] = 'tcp';
+    $cfg['Servers'][$i]['compress'] = false;
+    $cfg['Servers'][$i]['extension'] = 'mysqli';
+    $cfg['Servers'][$i]['AllowNoPassword'] = false;
+}
 
 /*
  * phpMyAdmin configuration storage settings.
