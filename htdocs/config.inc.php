@@ -14,7 +14,7 @@
  * This is needed for cookie based authentication to encrypt password in
  * cookie
  */
-$cfg['blowfish_secret'] = 'N3nfij93EJjn3f8d8nfj9dzZ'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */
+$cfg['blowfish_secret'] = '<you should replace this with something different>'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */
 
 /*
  * Servers configuration
@@ -24,30 +24,41 @@ $i = 0;
 /*
  * Read MySQL service properties from _ENV['VCAP_SERVICES']
  */
-$services = json_decode($_ENV['VCAP_SERVICES'], true);
+$service_blob = json_decode($_ENV['VCAP_SERVICES'], true);
 $mysql_services = array();
-foreach($services as $service_name => $service_list) {
-  if ($service_name === 'cleardb' || strpos($service_name, 'mysql') === 0) {
-    foreach($service_list as $mysql_service) {
-      $mysql_services[] = $mysql_service;
+foreach($service_blob as $service_provider => $service_list) {
+    // looks for 'cleardb' or 'p-mysql' service
+    if ($service_provider === 'cleardb' || $service_provider === 'p-mysql') {
+        foreach($service_list as $mysql_service) {
+            $mysql_services[] = $mysql_service;
+        }
+        continue;
     }
-  }
+    foreach ($service_list as $some_service) {
+        // looks for tags of 'mysql'
+        if (in_array('mysql', $some_service['tags'], true)) {
+            $mysql_services[] = $some_service;
+            continue;
+        }
+        // look for a service where the name includes 'mysql'
+        if (strpos($some_service['name'], 'mysql') !== false) {
+            $mysql_services[] = $some_service;
+        }
+    }
 }
-
-
 
 /*
  * Servers configuration
  */
-for($i = 1; $i <= count($mysql_services); $i++) {
-    $db = $mysql_services[$i-1]->credentials;
+for ($i = 1; $i <= count($mysql_services); $i++) {
+    $db = $mysql_services[$i-1]['credentials'];
     /* Display name */
-    $cfg['Servers'][$i]['verbose'] = $mysql_services[$i-1]->name;
+    $cfg['Servers'][$i]['verbose'] = $mysql_services[$i-1]['name'];
     /* Authentication type */
     $cfg['Servers'][$i]['auth_type'] = 'cookie';
     /* Server parameters */
-    $cfg['Servers'][$i]['host'] = $db->hostname;
-    $cfg['Servers'][$i]['port'] = $db->port;
+    $cfg['Servers'][$i]['host'] = $db['hostname'];
+    $cfg['Servers'][$i]['port'] = $db['port'];
     $cfg['Servers'][$i]['connect_type'] = 'tcp';
     $cfg['Servers'][$i]['compress'] = false;
     $cfg['Servers'][$i]['extension'] = 'mysqli';
