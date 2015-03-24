@@ -6,6 +6,6 @@ applications:
   host: phpmyadmin
   domain: cfapps.io
   path: .
-  buildpack: https://github.com/dmikusa-pivotal/cf-php-build-pack.git
+  buildpack: https://github.com/cloudfoundry/php-buildpack.git
   services:
   - mysql-db
