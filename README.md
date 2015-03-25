@@ -27,10 +27,10 @@ This is an out-of-the-box implementation of PHPMyAdmin 4.2.2.  It's an example h
   cf push
   ```
 
-  Access your application URL in the browser.  Login with the credentials for your service.  If you need to find these, just run this command and look for the VCAP_SERVICES environment variable.
+  Access your application URL in the browser.  Login with the credentials for your service.  If you need to find these, just run this command and look for the VCAP_SERVICES environment variable under the `System Provided` section.
 
   ```bash
-  cf files <app-name> logs/env.log
+  cf env <app-name>
   ```
 
 ### How It Works
