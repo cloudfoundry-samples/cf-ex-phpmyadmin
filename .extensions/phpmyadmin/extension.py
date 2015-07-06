@@ -12,14 +12,11 @@ _log = logging.getLogger('phpmyadmin')
 
 
 DEFAULTS = utils.FormattedDict({
-    'PHPMYADMIN_VERSION': '4.3.12',
+    'PHPMYADMIN_VERSION': '4.3.13.1',
     'PHPMYADMIN_PACKAGE': 'phpMyAdmin-{PHPMYADMIN_VERSION}-english.tar.gz',
-    'PHPMYADMIN_HASH': '707064d1efc37acc8e6fd7ddcc9030616ae32562',
-    'PHPMYADMIN_URL': 'http://sourceforge.net/projects/phpmyadmin/'
-                      'files/phpMyAdmin/{PHPMYADMIN_VERSION}/'
-                      '{PHPMYADMIN_PACKAGE}/download#'
+    'PHPMYADMIN_HASH': 'f8b10fdbf8fb2169642f1ec1584fd02f6ab1326e',
+    'PHPMYADMIN_URL': 'https://files.phpmyadmin.net/phpMyAdmin/{PHPMYADMIN_VERSION}/phpMyAdmin-{PHPMYADMIN_VERSION}-english.tar.gz'
 })
-
 
 # Extension Methods
 def preprocess_commands(ctx):
