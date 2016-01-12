@@ -78,6 +78,8 @@ $cfg['PmaAbsoluteUri'] = $scheme . '://' . $appCfg['uris'][0] . "/";
 
 $cfg['LoginCookieValidity'] = 1440;
 
+$cfg['ForceSSL'] = true;
+
 /* User used to manipulate with storage */
 // $cfg['Servers'][$i]['controlhost'] = '';
 // $cfg['Servers'][$i]['controlport'] = '';
