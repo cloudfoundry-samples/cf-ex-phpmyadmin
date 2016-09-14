@@ -1,11 +1,8 @@
 ---
 applications:
-- name: phpmyadmin
-  memory: 128M 
+- name: cf-ex-phpmyadmin
+  memory: 128M
   instances: 1
-  host: phpmyadmin
-  domain: cfapps.io
   path: .
-  buildpack: https://github.com/cloudfoundry/php-buildpack.git
   services:
-  - mysql-db
+  - mysql

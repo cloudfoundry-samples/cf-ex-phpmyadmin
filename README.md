@@ -16,10 +16,8 @@ This is an out-of-the-box implementation of PHPMyAdmin 4.2.2.  It's an example h
 1. If you don't have one already, create a MySQL service.  With Pivotal Web Services, the following command will create a free MySQL database through [ClearDb].
 
   ```bash
-  cf create-service cleardb spark my-test-mysql-db
+  cf create-service cleardb spark mysql
   ```
-
-1. Edit the manifest.yml file.  Change the 'host' attribute to something unique.  Then under "services:" change "mysql-db" to the name of your MySQL service.  This is the name of the service that will be bound to your application and thus available to PHPMyAdmin.
 
 1. Push it to CloudFoundry.
 
