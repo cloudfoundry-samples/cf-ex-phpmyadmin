@@ -1,4 +1,3 @@
 {
-    "ADMIN_EMAIL": "dan@mikusa.com",
-    "PHP_EXTENSIONS": ["mbstring", "mysqli", "mcrypt", "gd", "zip"]
+    "ADMIN_EMAIL": "admin@localhost"
 }

@@ -2,7 +2,7 @@
 
 This is an example application which can be run on CloudFoundry using the [PHP Build Pack].
 
-This is an out-of-the-box implementation of PHPMyAdmin 4.2.2.  It's an example how common PHP applications can easily be run on CloudFoundry.
+This is an out-of-the-box implementation of PHPMyAdmin 4.8.3. It's an example how common PHP applications can easily be run on CloudFoundry.
 
 ### Usage
 
@@ -18,6 +18,8 @@ This is an out-of-the-box implementation of PHPMyAdmin 4.2.2.  It's an example h
   ```bash
   cf create-service cleardb spark mysql
   ```
+
+1. Edit the `manifest.yml` file. Insert your service name, if it's not `mysql`. Also, set the route that you would like to use.
 
 1. Push it to CloudFoundry.
 
