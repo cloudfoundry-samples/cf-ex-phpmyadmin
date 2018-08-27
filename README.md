@@ -8,30 +8,30 @@ This is an out-of-the-box implementation of PHPMyAdmin 4.8.3. It's an example ho
 
 1. Clone the app (i.e. this repo).
 
-  ```bash
-  git clone https://github.com/cloudfoundry-samples/cf-ex-phpmyadmin
-  cd cf-ex-phpmyadmin
-  ```
+   ```bash
+   git clone https://github.com/cloudfoundry-samples/cf-ex-phpmyadmin
+   cd cf-ex-phpmyadmin
+   ```
 
 1. If you don't have one already, create a MySQL service.  With Pivotal Web Services, the following command will create a free MySQL database through [ClearDb].
 
-  ```bash
-  cf create-service cleardb spark mysql
-  ```
+   ```bash
+   cf create-service cleardb spark mysql
+   ```
 
 1. Edit the `manifest.yml` file. Insert your service name, if it's not `mysql`. Also, set the route that you would like to use.
 
 1. Push it to CloudFoundry.
 
-  ```bash
-  cf push
-  ```
+   ```bash
+   cf push
+   ```
 
   Access your application URL in the browser.  Login with the credentials for your service.  If you need to find these, just run this command and look for the VCAP_SERVICES environment variable under the `System Provided` section.
 
-  ```bash
-  cf env <app-name>
-  ```
+   ```bash
+   cf env <app-name>
+   ```
 
 ### How It Works
 
