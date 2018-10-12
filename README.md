@@ -18,7 +18,7 @@ This is an out-of-the-box implementation of PHPMyAdmin 4.8.3. It's an example ho
    ```bash
    cf create-service cleardb spark mysql
    ```
-   > If you have an existing db service with some arbitary name, please re-name the service such that it contains the *mysql* word as the *config.ini* file checks for *mysql* word for loading the service. This will avoid #8 issue.
+   *If you have an existing DB service with some arbitary name, please re-name the service such that it contains the string `mysql`. The `config.inc.php` file will automatically configure MySQL services if the plan is ClearDb or Pivotal MySQL, if they are tagged with `mysql` or if the service name contains the word `mysql`. If you do not follow this pattern, your MySQL service will require manual configuration.*
 
 1. Edit the `manifest.yml` file. Insert your service name, if it's not `mysql`. Also, set the route that you would like to use.
 
