@@ -4,6 +4,19 @@ This is an example application which can be run on CloudFoundry using the [PHP B
 
 This is an out-of-the-box implementation of PHPMyAdmin 4.8.3. It's an example how common PHP applications can easily be run on CloudFoundry.
 
+### Configuration
+
+To set the file size limit in PHPMyAdmin's import function
+
+  Open `extension.py` file found in `.bp-config/php/php.ini.d/` path. To configure the file size to be 64MB instead of the default 2MB, and the memory limit to 128MB to override the default memory limit, we need to add the following 3 properties to the end of the file.
+
+  ```bash
+  memory_limit=128M
+  post_max_size=64M
+  upload_max_filesize=64M
+  ```
+
+
 ### Usage
 
 1. Clone the app (i.e. this repo).
