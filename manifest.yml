@@ -4,7 +4,8 @@ applications:
   memory: 128M
   instances: 1
   path: .
-  buildpack: php_buildpack
+  buildpacks:
+    - php_buildpack
   services:
   - mysql
   routes:
