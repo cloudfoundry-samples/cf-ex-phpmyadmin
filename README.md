@@ -2,16 +2,28 @@
 
 This is an example application which can be run on CloudFoundry using the [PHP Build Pack].
 
-This is an out-of-the-box implementation of PHPMyAdmin 4.8.3. It's an example how common PHP applications can easily be run on CloudFoundry.
+This is an out-of-the-box implementation of PHPMyAdmin. It's an example how common PHP applications can easily be run on CloudFoundry.
 
 ### Usage
 
-1. Clone the app (i.e. this repo).
+1. Download the latest phpMyAdmin from [the project site](https://www.phpmyadmin.net/downloads/).
 
-   ```bash
-   git clone https://github.com/cloudfoundry-samples/cf-ex-phpmyadmin
-   cd cf-ex-phpmyadmin
-   ```
+1. Extract all of the files from phpMyAdmin to the `htdocs` directory. For example: `tar -zx --strip-components=1 -C htdocs/ -f ~/Downloads/phpMyAdmin-5.0.1-english.tar.gz`. When done, you should have an `htdocs` directory that looks like this...
+
+  ```bash
+  drwxr-xr-x  114 piccolo  wheel    3648 Mar  3 10:59 .
+  drwxr-xr-x   11 piccolo  wheel     352 Mar  3 10:55 ..
+  -rw-r--r--@   1 piccolo  wheel    3216 Jan  7 21:04 CODE_OF_CONDUCT.md
+  -rw-r--r--@   1 piccolo  wheel    2592 Jan  7 21:04 CONTRIBUTING.md
+  -rw-r--r--@   1 piccolo  wheel   21411 Jan  7 21:04 ChangeLog
+  -rw-r--r--@   1 piccolo  wheel    1816 Jan  7 21:04 DCO
+  -rw-r--r--@   1 piccolo  wheel   18092 Jan  7 21:04 LICENSE
+  -rw-r--r--@   1 piccolo  wheel    1520 Jan  7 21:04 README
+  -rw-r--r--@   1 piccolo  wheel      29 Jan  7 21:04 RELEASE-DATE-5.0.1
+  -rw-r--r--@   1 piccolo  wheel    2011 Jan  7 21:04 ajax.php
+  -rw-r--r--@   1 piccolo  wheel    1815 Jan  7 21:04 browse_foreigners.php
+  ...
+  ```
 
 1. If you don't have one already, create a MySQL service.  With Pivotal Web Services, the following command will create a free MySQL database through [ClearDb].
 
@@ -19,6 +31,63 @@ This is an out-of-the-box implementation of PHPMyAdmin 4.8.3. It's an example ho
    cf create-service cleardb spark mysql
    ```
    *If you have an existing DB service with some arbitary name, please re-name the service such that it contains the string `mysql`. The `config.inc.php` file will automatically configure MySQL services if the plan is ClearDb or Pivotal MySQL, if they are tagged with `mysql` or if the service name contains the word `mysql`. If you do not follow this pattern, your MySQL service will require manual configuration.*
+
+1. Copy `htdocs/config.sample.inc.php` to `htdocs/config.inc.php` & edit `htdocs/config.inc.php`. First, comment out the lines below `First server` and then insert the following directly below the link `$i = 0;`.
+
+  ```php
+  /*
+  * Read MySQL service properties from 'VCAP_SERVICES' env variable
+  */
+  $service_blob = json_decode(getenv('VCAP_SERVICES'), true);
+  $mysql_services = array();
+  foreach($service_blob as $service_provider => $service_list) {
+      // looks for 'cleardb' or 'p-mysql' service
+      if ($service_provider === 'cleardb' || $service_provider === 'p-mysql') {
+          foreach($service_list as $mysql_service) {
+              $mysql_services[] = $mysql_service;
+          }
+          continue;
+      }
+      foreach ($service_list as $some_service) {
+          // looks for tags of 'mysql'
+          if (in_array('mysql', $some_service['tags'], true)) {
+              $mysql_services[] = $some_service;
+              continue;
+          }
+          // look for a service where the name includes 'mysql'
+          if (strpos($some_service['name'], 'mysql') !== false) {
+              $mysql_services[] = $some_service;
+          }
+      }
+  }
+
+  /*
+  * Servers configuration
+  */
+  for ($i = 1; $i <= count($mysql_services); $i++) {
+      $db = $mysql_services[$i-1]['credentials'];
+      /* Display name */
+      $cfg['Servers'][$i]['verbose'] = $mysql_services[$i-1]['name'];
+      /* Authentication type */
+      $cfg['Servers'][$i]['auth_type'] = 'cookie';
+      /* Server parameters */
+      $cfg['Servers'][$i]['host'] = $db['hostname'];
+      $cfg['Servers'][$i]['port'] = $db['port'];
+      $cfg['Servers'][$i]['connect_type'] = 'tcp';
+      $cfg['Servers'][$i]['compress'] = false;
+      $cfg['Servers'][$i]['extension'] = 'mysqli';
+      $cfg['Servers'][$i]['AllowNoPassword'] = false;
+  }
+
+  /* force traffic to use HTTPS */
+  $appCfg = json_decode(getenv('VCAP_APPLICATION'), true);
+  $scheme = ($_SERVER['HTTPS'] != '') ? 'https' : 'http';
+  $cfg['PmaAbsoluteUri'] = $scheme . '://' . $appCfg['uris'][0] . "/";
+  $cfg['LoginCookieValidity'] = 1440;
+  $cfg['ForceSSL'] = true;
+  ```
+
+  Second, look for the config line at the top `$cfg['blowfish_secret']`. Insert a random 32 character passphrase as the value for that option. Save and close the file.
 
 1. Edit the `manifest.yml` file. Insert your service name, if it's not `mysql`. Also, set the route that you would like to use.
 

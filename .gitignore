@@ -1,1 +1,3 @@
 *.swp
+htdocs/*
+!htdocs/.git_placeholder
