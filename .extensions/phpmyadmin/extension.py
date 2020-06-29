@@ -12,9 +12,9 @@ _log = logging.getLogger('phpmyadmin')
 
 
 DEFAULTS = utils.FormattedDict({
-    'PHPMYADMIN_VERSION': '4.8.3',
+    'PHPMYADMIN_VERSION': '4.9.5',
     'PHPMYADMIN_PACKAGE': 'phpMyAdmin-{PHPMYADMIN_VERSION}-english.tar.gz',
-    'PHPMYADMIN_HASH': 'b0a9d1ae077f48efb90102c6da9d0ce6eb8f1b6f',
+    'PHPMYADMIN_HASH': '18847760414c856f0f401cd77ab45fa3d7541c5f2d273947b7e3cb6e06bf3845',
     'PHPMYADMIN_URL': 'https://files.phpmyadmin.net/phpMyAdmin/'
                       '{PHPMYADMIN_VERSION}/{PHPMYADMIN_PACKAGE}'
 })
