@@ -2,7 +2,7 @@
 
 This is an example application which can be run on CloudFoundry using the [PHP Build Pack].
 
-This is an out-of-the-box implementation of PHPMyAdmin 5.0.4. It's an example how common PHP applications can easily be run on CloudFoundry.
+This is an out-of-the-box implementation of PHPMyAdmin 5.1.1. It's an example how common PHP applications can easily be run on CloudFoundry.
 
 ### Usage
 
