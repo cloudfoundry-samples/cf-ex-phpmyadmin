@@ -14,7 +14,6 @@ _log = logging.getLogger('phpmyadmin')
 DEFAULTS = utils.FormattedDict({
     'PHPMYADMIN_VERSION': '5.1.1',
     'PHPMYADMIN_PACKAGE': 'phpMyAdmin-{PHPMYADMIN_VERSION}-english.tar.gz',
-    'PHPMYADMIN_HASH': 'f935c2ba8af0a708443bc5031a2aaf65c33b86a7',
     'PHPMYADMIN_URL': 'https://files.phpmyadmin.net/phpMyAdmin/'
                       '{PHPMYADMIN_VERSION}/{PHPMYADMIN_PACKAGE}'
 })
