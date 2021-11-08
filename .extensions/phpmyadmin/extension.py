@@ -39,7 +39,7 @@ def compile(install):
     workDir = os.path.join(ctx['TMPDIR'], 'phpmyadmin')
     inst.install_binary_direct(
         DEFAULTS['PHPMYADMIN_URL'],
-        DEFAULTS['PHPMYADMIN_HASH'],
+        '',
         workDir,
         fileName=DEFAULTS['PHPMYADMIN_PACKAGE'],
         strip=True)
